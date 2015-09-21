@@ -4,6 +4,8 @@
 ;;C-c M-o clear repl
 ;;C-c C-k Eval entire buffer
 ;;C-c C-x
+
+
 (defprotocol Notify
   (notify-send! [this msg]))
 
@@ -54,13 +56,13 @@
 
 
 (defonce smtp
-  (make-smtp {:host "smtp.aveva.com" :port 21 :password "test" :user "nisse" :ssl false :auth false}))
+  (make-smtp {:host "smtp.mail.com" :port 21 :password "test" :user "nisse" :ssl false :auth false}))
 
 (notify-send! smtp
               {:subject "asdasd"
-               :from "roar.sunde@aveva.com"
+               :from "frommer@mail.com"
                :text "hei"
-               :recipients "roar.sunde@aveva.com"})
+               :recipients "toer@mail.com"})
 
 
 (defrecord PostMark [session]
