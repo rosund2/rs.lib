@@ -106,18 +106,36 @@
 ;; How many combos of cards can we have
 ;; I want a program that i give a range lets say 10% and that it returns me a minimum formatted list of ranges
 ;;
-(def deck [["A" ::club]
-           ["A" ::heart]
-           ["A" ::diamond]
-           ["A" ::spade]])
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; (def deck [["A" ::club]    ;;
+;;            ["A" ::heart]   ;;
+;;            ["A" ::diamond] ;;
+;;            ["A" ::spade]]) ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; What is a suitable datastructure for that ?
+;;"AA" "AKS" "AQs"
+;;"AK" "KK" "KQs"
+;;"AQ" "KQ" "QQ"
 
+(defn pp [hc])
+(defn oc [hc])
+(defn sc [hc])
 
+(defn make-deck []
+  [(pp "AA") (ss "AK") (sk "AQ")]
+  [(oc "AK") (pp "KK") (sk "KQ")]
+  [(oc "AQ") (oc "KQ") (pp "QQ")])
 
-
-
-
+(let [aces (into []
+                 (for [x [:a :b :c :d]
+                       y ["A"]]
+                   [y x]))]
+  (for [c aces
+        d aces
+        :while (not= c d)]
+    
+    [c d]))
 
 
 
