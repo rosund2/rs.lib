@@ -1,4 +1,4 @@
-(ns rs.poker)
+(ns rs.lib.poker)
 
 
 (defn how-often [n1 n2]
@@ -118,7 +118,17 @@
 ;;"AK" "KK" "KQs"
 ;;"AQ" "KQ" "QQ"
 
-(defn pp [hc])
+(defn pp [hc]
+  "creates all combinations of hands for a pair"
+  {:pre [(string? hc) (= 2 (count (seq hc)))]}
+  (let [v (.toString (first hc))]
+    (into [] (for [c (make-suits v)
+                   d (make-suits v)
+                   :while (not= c d)]    
+               [c d]))))
+
+
+
 (defn oc [hc])
 (defn sc [hc])
 
@@ -127,16 +137,11 @@
   [(oc "AK") (pp "KK") (sk "KQ")]
   [(oc "AQ") (oc "KQ") (pp "QQ")])
 
-(let [aces (into []
-                 (for [x [:a :b :c :d]
-                       y ["A"]]
-                   [y x]))]
-  (for [c aces
-        d aces
-        :while (not= c d)]
-    
-    [c d]))
 
+(defn- make-suits [v]
+  (into [] (for [x [:a :b :c :d]
+                 y [v]]
+             [y x])))
 
 
 
