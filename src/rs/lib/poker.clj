@@ -1,6 +1,9 @@
 (ns rs.lib.poker)
 
 
+;;M-( wrap round
+;;M-r Raise 
+
 (defn how-often [n1 n2]
   "calculates how often you will need to win the pot by betting. n1 = bet, n2 = pot"
   (/ n1 (+ n1 n2)))
@@ -146,12 +149,25 @@
                    :when (not= (second c) (second d))]    
                [c d]))))
 
+(defn sc [hc]
+    "creates all combinations of a suited combo"
+  {:pre [(string? hc)
+         (= 2 (count (seq hc)))
+         (not= (first hc) (second hc))]}
 
-
-(defn sc [hc])
+  (let [c1 (.toString (first hc))
+        c2 (.toString (second hc))]
+    (into [] (for [c (make-suits c1)
+                   d (make-suits c2)
+                   :when (= (second c) (second d))]    
+               [c d]))))
 
 (defn make-deck []
-  [[(pp "AA") (sc "AK") (sc "AQ")]
-   [(oc "AK") (pp "KK") (sc "KQ")]
-   [(oc "AQ") (oc "KQ") (pp "QQ")]])
+  [[(pp "AA") (sc "AK") (sc "AQ") (sc "AJ") (sc "AT") (sc "A9") (sc "A8") (sc "A7") (sc "A6") (sc "A5") (sc "A4") (sc "A3") (sc "A2")]
+   [(oc "AK") (pp "KK") (sc "KQ") (sc "KJ") (sc "KT") (sc "K9") (sc "K8") (sc "K7") (sc "K6") (sc "K5") (sc "K4") (sc "K3") (sc "K2")]
+   [(oc "AQ") (oc "KQ") (pp "QQ") (sc "QJ") (sc "QT") (sc "Q9") (sc "Q8") (sc "Q7") (sc "Q6") (sc "Q5") (sc "Q4") (sc "Q3") (sc "Q2")]
+   [(oc "AJ") (oc "KJ") (oc "QJ") (pp "JJ") (sc "JT") (sc "J9") (sc "J8") (sc "J7") (sc "J6") (sc "J5") (sc "J4") (sc "J3") (sc "J2")]
+   [(oc "AT") (oc "KT") (oc "QT") (oc "JT") (pp "TT") (sc "T9") (sc "T8") (sc "T7") (sc "T6") (sc "T5") (sc "T4") (sc "T3") (sc "T2")]
+   ])
+
 
