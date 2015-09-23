@@ -116,13 +116,16 @@
 ;;"AK" "KK" "KQs"
 ;;"AQ" "KQ" "QQ"
 
+
+(def suits #{:club :diamond :spade :heart})
+
 (defn- make-suits [v]
-  (into [] (for [x [:a :b :c :d]
+  (into [] (for [x suits
                  y [v]]
              [y x])))
 
 (defn pp [hc]
-  "creates all combinations of hands for a pair"
+  "creates all combinations of a pocker pair"
   {:pre [(string? hc) (= 2 (count (seq hc)))]}
   (let [v (.toString (first hc))]
     (into [] (for [c (make-suits v)
@@ -130,24 +133,25 @@
                    :while (not= c d)]    
                [c d]))))
 
-(defn oc [hc])
+(defn oc [hc]
+  "creates all combinations of an unsuited combo"
+  {:pre [(string? hc)
+         (= 2 (count (seq hc)))
+         (not= (first hc) (second hc))]}
+
+  (let [c1 (.toString (first hc))
+        c2 (.toString (second hc))]
+    (into [] (for [c (make-suits c1)
+                   d (make-suits c2)
+                   :when (not= (second c) (second d))]    
+               [c d]))))
+
+
+
 (defn sc [hc])
 
 (defn make-deck []
-  [(pp "AA") (sc "AK") (sc "AQ")]
-  [(oc "AK") (pp "KK") (sc "KQ")]
-  [(oc "AQ") (oc "KQ") (pp "QQ")])
-
-
-
-
-
-
-
-
-
-
-
-
-
+  [[(pp "AA") (sc "AK") (sc "AQ")]
+   [(oc "AK") (pp "KK") (sc "KQ")]
+   [(oc "AQ") (oc "KQ") (pp "QQ")]])
 

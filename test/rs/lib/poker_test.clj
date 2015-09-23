@@ -5,7 +5,9 @@
 (deftest hand-maker []
   (testing "creating pairs"
     (let [pairs (pp "AA")]
-      (is (= 6 (count pairs)), "does not contain six pairs"))))
+      (is (= 6 (count pairs)), "does not contain six pairs")
+      (is (empty? (filter #(= (first %) (second %)) pairs))), "should not include same suit")
+    (let [suited (sc "AK")])))
 
 
 
