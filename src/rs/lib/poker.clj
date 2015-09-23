@@ -99,8 +99,6 @@
 ;; what a range look like
 (def hand-range ["A3s+" "A3o+" "Ac3o+" "AcKs"])
 
-;; (Character/getNumericValue \S)
-(def z [\T \J \Q \K \A])
 
 ;;
 ;; How many combos of cards can we have
@@ -118,6 +116,11 @@
 ;;"AK" "KK" "KQs"
 ;;"AQ" "KQ" "QQ"
 
+(defn- make-suits [v]
+  (into [] (for [x [:a :b :c :d]
+                 y [v]]
+             [y x])))
+
 (defn pp [hc]
   "creates all combinations of hands for a pair"
   {:pre [(string? hc) (= 2 (count (seq hc)))]}
@@ -127,21 +130,15 @@
                    :while (not= c d)]    
                [c d]))))
 
-
-
 (defn oc [hc])
 (defn sc [hc])
 
 (defn make-deck []
-  [(pp "AA") (ss "AK") (sk "AQ")]
-  [(oc "AK") (pp "KK") (sk "KQ")]
+  [(pp "AA") (sc "AK") (sc "AQ")]
+  [(oc "AK") (pp "KK") (sc "KQ")]
   [(oc "AQ") (oc "KQ") (pp "QQ")])
 
 
-(defn- make-suits [v]
-  (into [] (for [x [:a :b :c :d]
-                 y [v]]
-             [y x])))
 
 
 
