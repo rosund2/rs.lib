@@ -1,4 +1,4 @@
-(ns foo1.mail
+(ns rs.lib.mail
   (:import [javax.mail Authenticator]))
 
 ;;C-c M-o clear repl
@@ -55,14 +55,16 @@
         props)))))
 
 
-(defonce smtp
-  (make-smtp {:host "smtp.mail.com" :port 21 :password "test" :user "nisse" :ssl false :auth false}))
-
-(notify-send! smtp
-              {:subject "asdasd"
-               :from "frommer@mail.com"
-               :text "hei"
-               :recipients "toer@mail.com"})
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; (defonce smtp                                                                                         ;;
+;;   (make-smtp {:host "smtp.mail.com" :port 21 :password "test" :user "nisse" :ssl false :auth false})) ;;
+;;                                                                                                       ;;
+;; (notify-send! smtp                                                                                    ;;
+;;               {:subject "asdasd"                                                                      ;;
+;;                :from "frommer@mail.com"                                                               ;;
+;;                :text "hei"                                                                            ;;
+;;                :recipients "toer@mail.com"})                                                          ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
 (defrecord PostMark [session]
