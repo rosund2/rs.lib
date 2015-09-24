@@ -162,11 +162,22 @@
    [(oc "A3") (oc "K3") (oc "Q3") (oc "J3") (oc "T3") (oc "93") (oc "83") (oc "73") (oc "63") (oc "53") (oc "43") (pp "33") (sc "32")]
    [(oc "A2") (oc "K2") (oc "Q2") (oc "J2") (oc "T2") (oc "92") (oc "82") (oc "72") (oc "62") (oc "52") (oc "42") (oc "32") (pp "22")]])
 
-(defn deck-read-hand [deck a b]
+(defn deck-read-combos [deck a b]
   (nth (nth deck a) b))
 
-(defn deck-update-hand [deck a b f]
+(defn deck-update-combos [deck a b f]
   (update-in deck [a b] f ))
+
+(defn deck-flatten-to-combos [deck]
+  (reduce (fn [total-combos range]
+            (reduce (fn [combos combo]
+                      (reduce conj combos combo))
+                    total-combos range))
+          [] deck)) 
+
+(defn deck-range-select-tp [deck d]
+  "selects TP type hands in the deck up until we selected the d percentage"
+  )
 
 (defn deck-range-select [deck d]
   "create a range from a percentage"
