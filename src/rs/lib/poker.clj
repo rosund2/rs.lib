@@ -110,9 +110,12 @@
 (def suits #{:club :diamond :spade :heart})
 
 (defn make-card [rank suit]
+  {:pre [(string? rank) (keyword suit)]}
   {:suit suit :rank rank})
 
 (defn make-card-suits [v]
+  "makes all the variants for a card (Ac, Ad, As, Ah) ie"
+  {:pre [(string? v)]}
   (into [] (for [suit suits
                  rank [v]]
              (make-card rank suit))))
@@ -190,21 +193,25 @@
            n 0                          ; number of combos we have selected
            range range]
 
-      (let [wcpos (first range)]
+      (let [[a b] (first range)]
         (cond
           ;; if we are over the range limit
           ;; or we dont have a path anymore to
           ;; follow we just return deck
           (or (>= n nlimit)
-              (nil? (first wcpos)))
+              (nil? (first range)))
           deck
           
           :else
           ;; 
-          (let [ccount (count (deck-read-wc-combos deck (first wcpos) (second wcpos)))
-                updeck (deck-update-wc-combos deck (first wcpos) (second wcpos) (fn [wcc] (into [] (map (fn [x]x) wcc))))]
-           (recur updeck
-                  (+ n ccount) ;; Should have an updated combo count
+          (let [deck (deck-update-wc-combos deck a b
+                                            (fn [wcc] (map
+                                                       (fn [x]
+                                                         (do (println "asdasd" x) x))
+                                                       ;;#(assoc % ::selected? true)
+                                                       wcc)))]
+           (recur deck
+                  (+ n 1) ;; Should have an updated combo count
                   (rest range))))))))
 
 (defn deck-range-select [deck d]
