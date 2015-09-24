@@ -113,7 +113,7 @@
   {:pre [(string? rank) (keyword suit)]}
   {:suit suit :rank rank})
 
-(defn make-card-suits [v]
+(defn make-card-variants [v]
   "makes all the variants for a card (Ac, Ad, As, Ah) ie"
   {:pre [(string? v)]}
   (into [] (for [suit suits
@@ -124,8 +124,8 @@
   "creates all combinations of a pocker pair"
   {:pre [(string? hc) (= 2 (count (seq hc)))]}
   (let [v (.toString (first hc))]
-    (into [] (for [c (make-card-suits v)
-                   d (make-card-suits v)
+    (into [] (for [c (make-card-variants v)
+                   d (make-card-variants v)
                    :while (not= c d)]    
                [c d]))))
 
@@ -137,9 +137,9 @@
 
   (let [c1 (.toString (first hc))
         c2 (.toString (second hc))]
-    (into [] (for [c (make-card-suits c1)
-                   d (make-card-suits c2)
-                   :when (not= (second c) (second d))]    
+    (into [] (for [c (make-card-variants c1)
+                   d (make-card-variants c2)
+                   :when (not= (:suit c) (:suit d))]    
                [c d]))))
 
 (defn sc [hc]
@@ -150,9 +150,9 @@
 
   (let [c1 (.toString (first hc))
         c2 (.toString (second hc))]
-    (into [] (for [c (make-card-suits c1)
-                   d (make-card-suits c2)
-                   :when (= (second c) (second d))]    
+    (into [] (for [c (make-card-variants c1)
+                   d (make-card-variants c2)
+                   :when (= (:suit c) (:suit d))]    
                [c d]))))
 
 (defn make-deck []
@@ -194,6 +194,7 @@
            range range]
 
       (let [[a b] (first range)]
+        
         (cond
           ;; if we are over the range limit
           ;; or we dont have a path anymore to
@@ -204,12 +205,15 @@
           
           :else
           ;; 
-          (let [deck (deck-update-wc-combos deck a b
-                                            (fn [wcc] (map
-                                                       (fn [x]
-                                                         (do (println "asdasd" x) x))
-                                                       ;;#(assoc % ::selected? true)
-                                                       wcc)))]
+          (let [deck (doall (deck-update-wc-combos deck a b
+                                             (fn [wcc]
+                                               (do
+                                                 (println wcc)
+                                                 #_(map
+                                                  (fn [x]
+                                                    (do (println "asdasd" x) x))
+                                                  ;;#(assoc % ::selected? true)
+                                                  wcc)))))]
            (recur deck
                   (+ n 1) ;; Should have an updated combo count
                   (rest range))))))))
