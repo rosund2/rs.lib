@@ -93,33 +93,18 @@
     (* 4 4))))
 
 
-;; create range from percentage
-(defn range-maker [n])
-
-;; go from range to combos
-(defn combos [s] )
-
-;; what a range look like
-(def hand-range ["A3s+" "A3o+" "Ac3o+" "AcKs"])
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; what a range look like                          ;;
+;; (def hand-range ["A3s+" "A3o+" "Ac3o+" "AcKs"]) ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
-;;
-;; How many combos of cards can we have
-;; I want a program that i give a range lets say 10% and that it returns me a minimum formatted list of ranges
-;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; (def deck [["A" ::club]    ;;
+;; (def hand [["A" ::club]    ;;
 ;;            ["A" ::heart]   ;;
 ;;            ["A" ::diamond] ;;
 ;;            ["A" ::spade]]) ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;; What is a suitable datastructure for that ?
-;;"AA" "AKS" "AQs"
-;;"AK" "KK" "KQs"
-;;"AQ" "KQ" "QQ"
-
-
 (def suits #{:club :diamond :spade :heart})
 
 (defn- make-suits [v]
@@ -168,6 +153,48 @@
    [(oc "AQ") (oc "KQ") (pp "QQ") (sc "QJ") (sc "QT") (sc "Q9") (sc "Q8") (sc "Q7") (sc "Q6") (sc "Q5") (sc "Q4") (sc "Q3") (sc "Q2")]
    [(oc "AJ") (oc "KJ") (oc "QJ") (pp "JJ") (sc "JT") (sc "J9") (sc "J8") (sc "J7") (sc "J6") (sc "J5") (sc "J4") (sc "J3") (sc "J2")]
    [(oc "AT") (oc "KT") (oc "QT") (oc "JT") (pp "TT") (sc "T9") (sc "T8") (sc "T7") (sc "T6") (sc "T5") (sc "T4") (sc "T3") (sc "T2")]
-   ])
+   [(oc "A9") (oc "K9") (oc "Q9") (oc "J9") (oc "T9") (pp "99") (sc "98") (sc "97") (sc "96") (sc "95") (sc "94") (sc "93") (sc "92")]
+   [(oc "A8") (oc "K8") (oc "Q8") (oc "J8") (oc "T8") (oc "98") (pp "88") (sc "87") (sc "86") (sc "85") (sc "84") (sc "83") (sc "82")]
+   [(oc "A7") (oc "K7") (oc "Q7") (oc "J7") (oc "T7") (oc "97") (oc "87") (pp "77") (sc "76") (sc "75") (sc "74") (sc "73") (sc "72")]
+   [(oc "A6") (oc "K6") (oc "Q6") (oc "J6") (oc "T6") (oc "96") (oc "86") (oc "76") (pp "66") (sc "65") (sc "64") (sc "63") (sc "62")]
+   [(oc "A5") (oc "K5") (oc "Q5") (oc "J5") (oc "T5") (oc "95") (oc "85") (oc "75") (oc "65") (pp "55") (sc "54") (sc "53") (sc "52")]
+   [(oc "A4") (oc "K4") (oc "Q4") (oc "J4") (oc "T4") (oc "94") (oc "84") (oc "74") (oc "64") (oc "54") (pp "44") (sc "43") (sc "42")]
+   [(oc "A3") (oc "K3") (oc "Q3") (oc "J3") (oc "T3") (oc "93") (oc "83") (oc "73") (oc "63") (oc "53") (oc "43") (pp "33") (sc "32")]
+   [(oc "A2") (oc "K2") (oc "Q2") (oc "J2") (oc "T2") (oc "92") (oc "82") (oc "72") (oc "62") (oc "52") (oc "42") (oc "32") (pp "22")]])
+
+(defn deck-read-hand [deck a b]
+  (nth (nth deck a) b))
+
+(defn deck-update-hand [deck a b f]
+  (update-in deck [a b] f ))
+
+(defn deck-range-select [deck d]
+  "create a range from a percentage"
+  ;; What path do we follow
+  ;; Stop when selected combos / total > d
+  )
+
+(defn deck-range-ppstring [deck]
+  "make a pretty string of the range selected"
+  )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
