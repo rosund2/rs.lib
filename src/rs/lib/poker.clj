@@ -1,6 +1,8 @@
 (ns rs.lib.poker)
 
-
+;;Read this:
+;;http://www.blackrain79.com/2015/08/flop-strategies-versus-bad-poker.html
+;;
 ;;M-( wrap round
 ;;M-r Raise 
 
@@ -107,17 +109,20 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (def suits #{:club :diamond :spade :heart})
 
-(defn- make-suits [v]
-  (into [] (for [x suits
-                 y [v]]
-             [y x])))
+(defn make-card [rank suit]
+  {:suit suit :rank rank})
+
+(defn make-card-suits [v]
+  (into [] (for [suit suits
+                 rank [v]]
+             (make-card rank suit))))
 
 (defn pp [hc]
   "creates all combinations of a pocker pair"
   {:pre [(string? hc) (= 2 (count (seq hc)))]}
   (let [v (.toString (first hc))]
-    (into [] (for [c (make-suits v)
-                   d (make-suits v)
+    (into [] (for [c (make-card-suits v)
+                   d (make-card-suits v)
                    :while (not= c d)]    
                [c d]))))
 
@@ -129,8 +134,8 @@
 
   (let [c1 (.toString (first hc))
         c2 (.toString (second hc))]
-    (into [] (for [c (make-suits c1)
-                   d (make-suits c2)
+    (into [] (for [c (make-card-suits c1)
+                   d (make-card-suits c2)
                    :when (not= (second c) (second d))]    
                [c d]))))
 
@@ -142,8 +147,8 @@
 
   (let [c1 (.toString (first hc))
         c2 (.toString (second hc))]
-    (into [] (for [c (make-suits c1)
-                   d (make-suits c2)
+    (into [] (for [c (make-card-suits c1)
+                   d (make-card-suits c2)
                    :when (= (second c) (second d))]    
                [c d]))))
 
@@ -162,22 +167,45 @@
    [(oc "A3") (oc "K3") (oc "Q3") (oc "J3") (oc "T3") (oc "93") (oc "83") (oc "73") (oc "63") (oc "53") (oc "43") (pp "33") (sc "32")]
    [(oc "A2") (oc "K2") (oc "Q2") (oc "J2") (oc "T2") (oc "92") (oc "82") (oc "72") (oc "62") (oc "52") (oc "42") (oc "32") (pp "22")]])
 
-(defn deck-read-combos [deck a b]
+;; a specific AK KK 97 is called wholecards wc
+;; combinations of their suit are called wc combos
+
+(defn deck-read-wc-combos [deck a b]
   (nth (nth deck a) b))
 
-(defn deck-update-combos [deck a b f]
-  (update-in deck [a b] f ))
+(defn deck-update-wc-combos [deck a b f]
+     (update-in deck [a b] f ))
 
-(defn deck-flatten-to-combos [deck]
+(defn deck-flatten-to-wc [deck]
   (reduce (fn [total-combos range]
             (reduce (fn [combos combo]
                       (reduce conj combos combo))
                     total-combos range))
           [] deck)) 
 
-(defn deck-range-select-tp [deck d]
-  "selects TP type hands in the deck up until we selected the d percentage"
-  )
+(defn deck-range-select-tpp [deck nlimit]
+  "selects TP wc combos in the deck up until we reach the selected number of combos"
+  (let [range (seq #{[1 1] [2 2] [3 3] [4 4]})] ; AA/KK/QQ/JJ
+    (loop [deck deck
+           n 0                          ; number of combos we have selected
+           range range]
+
+      (let [wcpos (first range)]
+        (cond
+          ;; if we are over the range limit
+          ;; or we dont have a path anymore to
+          ;; follow we just return deck
+          (or (>= n nlimit)
+              (nil? (first wcpos)))
+          deck
+          
+          :else
+          ;; 
+          (let [ccount (count (deck-read-wc-combos deck (first wcpos) (second wcpos)))
+                updeck (deck-update-wc-combos deck (first wcpos) (second wcpos) (fn [wcc] (into [] (map (fn [x]x) wcc))))]
+           (recur updeck
+                  (+ n ccount) ;; Should have an updated combo count
+                  (rest range))))))))
 
 (defn deck-range-select [deck d]
   "create a range from a percentage"
