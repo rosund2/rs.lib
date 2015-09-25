@@ -198,13 +198,10 @@
   (loop [methods [deck-range-select-tpp]
          deck deck
          count 0]
-    (if-not (or (seq methods)
-            (>= count nc))
-      (do
-        (println "asdasd" (seq methods))
-        deck)
+    (if (or (empty? methods)
+                (>= count nc))
+      deck
       (let [deck ((first methods) deck (- nc count))]
-        (println "gfot here" (rest methods))
         (recur
          (rest methods)
          deck
