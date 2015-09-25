@@ -57,43 +57,6 @@
    (* (+ pot) (probability foldc openc))))
 
 
-(equity-of-raise
- ;; opening combos
- 200
- ;; folding combos
- 180
- ;; raising combos
- 50
- ;; pot size
- 0.75
- ;; bet size
- 0.9)
-
-
-(defn combo-parser [s]
-  {:pre [(string? s)]}
-  (let [s (seq s)]
-    (cond
-    ;; PP
-    (and (= 2 (count s))
-         (= (first s) (last s)))
-    (* 3 2)
-    ;; AKo 
-    (and
-     (= 3 (count s))
-     (not (= (first s) (second s)))
-     (= \o (last s)))
-    (* 4 3)
-    ;; AKs
-    (and
-     (= 3 (count s))
-     (not (= (first s) (second s)))
-     (= \s (last s)))
-    (* 4 1)
-    :else
-    ;; AK
-    (* 4 4))))
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; what a range look like                          ;;
@@ -102,16 +65,19 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; (def hand [["A" ::club]    ;;
-;;            ["A" ::heart]   ;;
-;;            ["A" ::diamond] ;;
-;;            ["A" ::spade]]) ;;
+;; (def cards [{"A" ::club}    ;;
+;;            {"A" ::heart}   ;;
+;;            {"A" ::diamond} ;;
+;;            {"A" ::spade}]) ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (def suits #{:club :diamond :spade :heart})
 
 (defn make-card [rank suit]
   {:pre [(string? rank) (keyword suit)]}
   {:suit suit :rank rank})
+
+(defn card-same-suit? [a b]
+  (= (:suit a) (:suit b)))
 
 (defn make-card-variants [v]
   "makes all the variants for a card (Ac, Ad, As, Ah) ie"
@@ -139,7 +105,7 @@
         c2 (.toString (second hc))]
     (into [] (for [c (make-card-variants c1)
                    d (make-card-variants c2)
-                   :when (not= (:suit c) (:suit d))]    
+                   :when (not (card-same-suit? c d))]    
                [c d]))))
 
 (defn sc [hc]
@@ -152,7 +118,7 @@
         c2 (.toString (second hc))]
     (into [] (for [c (make-card-variants c1)
                    d (make-card-variants c2)
-                   :when (= (:suit c) (:suit d))]    
+                   :when (card-same-suit? c d)]    
                [c d]))))
 
 (defn make-deck []
@@ -188,13 +154,11 @@
 
 (defn deck-range-select-tpp [deck nlimit]
   "selects TP wc combos in the deck up until we reach the selected number of combos"
-  (let [range (seq #{[1 1] [2 2] [3 3] [4 4]})] ; AA/KK/QQ/JJ
+  (let [range (seq [[0 0] [1 1] [2 2] [3 3] [4 4]])]  ;AA,KK,QQ,JJ,TT
     (loop [deck deck
            n 0                          ; number of combos we have selected
            range range]
-
-      (let [[a b] (first range)]
-        
+      (let [[a b] (first range)]        
         (cond
           ;; if we are over the range limit
           ;; or we dont have a path anymore to
@@ -204,30 +168,51 @@
           deck
           
           :else
-          ;; 
+          ;; select all wc combos at the coord
+          ;; note: we might select more combos than
+          ;; asked for but lets just view it as an
+          ;; approximation for now
           (let [deck (doall (deck-update-wc-combos deck a b
                                              (fn [wcc]
-                                               (do
-                                                 (println wcc)
-                                                 #_(map
-                                                  (fn [x]
-                                                    (do (println "asdasd" x) x))
-                                                  ;;#(assoc % ::selected? true)
-                                                  wcc)))))]
-           (recur deck
-                  (+ n 1) ;; Should have an updated combo count
-                  (rest range))))))))
+                                               (mapv
+                                                (fn [wc]
+                                                  (mapv  #(assoc % :selected? true) wc))
+                                                wcc))))]
+            (recur deck
+                   (+ n 1) 
+                   (rest range))))))))
 
-(defn deck-range-select [deck d]
-  "create a range from a percentage"
+
+(defn deck-selected-count [deck]
+  "count the number of selected combos in the deck"
+  (reduce (fn [count wc]
+            (if (seq (filter :selected? wc))
+              (inc count) count)
+            ) 0 (deck-flatten-to-wc deck)))
+
+
+(defn deck-range-select [deck nc]
+  "selects a number of wholecards combos in a deck based on best to worse"
   ;; What path do we follow
-  ;; Stop when selected combos / total > d
-  )
+  ;; method -> left -> method -> left -> method -> left
+  (loop [methods [deck-range-select-tpp]
+         deck deck
+         count 0]
+    (if-not (or (seq methods)
+            (>= count nc))
+      (do
+        (println "asdasd" (seq methods))
+        deck)
+      (let [deck ((first methods) deck (- nc count))]
+        (println "gfot here" (rest methods))
+        (recur
+         (rest methods)
+         deck
+         (deck-selected-count deck))))))
 
 (defn deck-range-ppstring [deck]
   "make a pretty string of the range selected"
   )
-
 
 
 
