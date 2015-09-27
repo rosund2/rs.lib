@@ -79,15 +79,17 @@
 (defn card-same-suit? [a b]
   (= (:suit a) (:suit b)))
 
-(defn make-card-variants [v]
+(defn make-card-variants
   "makes all the variants for a card (Ac, Ad, As, Ah) ie"
+  [v]
   {:pre [(string? v)]}
   (into [] (for [suit suits
                  rank [v]]
              (make-card rank suit))))
 
-(defn pp [hc]
+(defn pp
   "creates all combinations of a pocker pair"
+  [hc]
   {:pre [(string? hc) (= 2 (count (seq hc)))]}
   (let [v (.toString (first hc))]
     (into [] (for [c (make-card-variants v)
@@ -95,8 +97,10 @@
                    :while (not= c d)]    
                [c d]))))
 
-(defn oc [hc]
+(defn oc
   "creates all combinations of an unsuited combo"
+  [hc]
+
   {:pre [(string? hc)
          (= 2 (count (seq hc)))
          (not= (first hc) (second hc))]}
@@ -108,8 +112,9 @@
                    :when (not (card-same-suit? c d))]    
                [c d]))))
 
-(defn sc [hc]
+(defn sc
     "creates all combinations of a suited combo"
+  [hc]
   {:pre [(string? hc)
          (= 2 (count (seq hc)))
          (not= (first hc) (second hc))]}
@@ -142,6 +147,9 @@
 (defn deck-read-wc-combos [deck a b]
   (nth (nth deck a) b))
 
+(defn wc-combos-inrange-count [wcc]
+  (count (filter (fn [wc] (some :inrange? wc)) wcc)))
+
 (defn deck-update-wc-combos [deck a b f]
      (update-in deck [a b] f ))
 
@@ -150,21 +158,24 @@
             (reduce (fn [combos combo]
                       (reduce conj combos combo))
                     total-combos range))
-          [] deck)) 
+          [] deck))
 
-(defn deck-range-select-tpp [deck nlimit]
-  "selects TP wc combos in the deck up until we reach the selected number of combos"
-  (let [range (seq [[0 0] [1 1] [2 2] [3 3] [4 4]])]  ;AA,KK,QQ,JJ,TT
-    (loop [deck deck
-           n 0                          ; number of combos we have selected
-           range range]
-      (let [[a b] (first range)]        
+
+(defn- deck-range-select-by-path
+  "follow a path [[a b]] over the deck and selects wc up to the nlimit of combinations"
+  [deck path nlimit]
+
+  (loop [deck deck
+         ;; number of combos we have selected
+         n 0                
+         path (seq path)]
+      (let [[a b] (first path)]        
         (cond
-          ;; if we are over the range limit
+          ;; if we are over the path limit
           ;; or we dont have a path anymore to
           ;; follow we just return deck
           (or (>= n nlimit)
-              (nil? (first range)))
+              (nil? (first path)))
           deck
           
           :else
@@ -173,42 +184,53 @@
           ;; asked for but lets just view it as an
           ;; approximation for now
           (let [deck (doall (deck-update-wc-combos deck a b
-                                             (fn [wcc]
-                                               (mapv
-                                                (fn [wc]
-                                                  (mapv  #(assoc % :selected? true) wc))
-                                                wcc))))]
+                                                   (fn [wcc]
+                                                     (mapv (fn [wc]
+                                                             (mapv  #(assoc % :inrange? true) wc)) wcc))))]
             (recur deck
-                   (+ n 1) 
-                   (rest range))))))))
+                   (+ n (wc-combos-inrange-count
+                         (deck-read-wc-combos deck a b)))
+                   (rest path)))))))
 
 
-(defn deck-selected-count [deck]
+
+(defn deck-total-inrange-count
   "count the number of selected combos in the deck"
+  [deck]
   (reduce (fn [count wc]
             (if (seq (filter :selected? wc))
               (inc count) count)
             ) 0 (deck-flatten-to-wc deck)))
 
 
-(defn deck-range-select [deck nc]
-  "selects a number of wholecards combos in a deck based on best to worse"
-  ;; What path do we follow
-  ;; method -> left -> method -> left -> method -> left
-  (loop [methods [deck-range-select-tpp]
-         deck deck
-         count 0]
-    (if (or (empty? methods)
-                (>= count nc))
-      deck
-      (let [deck ((first methods) deck (- nc count))]
-        (recur
-         (rest methods)
-         deck
-         (deck-selected-count deck))))))
 
-(defn deck-range-ppstring [deck]
-  "make a pretty string of the range selected"
+(defn deck-range-select
+  "selects a number of wholecards combos in a deck based on best to worse"
+  [deck nc]
+
+  (let
+      ;; Top pair combos AA,KK,QQ,JJ
+      [top-pair-coords [[0 0] [1 1] [2 2] [3 3] [4 4]]] 
+
+      (loop [methods [#(deck-range-select-by-path %1 top-pair-coords %2)]
+          deck deck
+          count 0]
+     (if (or (empty? methods)
+             (>= count nc))
+       deck
+       (let [deck ((first methods) deck (- nc count))]
+         (recur
+          (rest methods)
+          deck
+          (deck-total-inrange-count deck)))))))
+
+
+
+(defn deck-range-ppstring
+  "make a pretty string of the selected range"
+  [deck]
+
+  ;; We need to follow the AA -> 23o path
   )
 
 
