@@ -160,6 +160,13 @@
                     total-combos range))
           [] deck))
 
+(defn- deck-range-select-wc-combo
+  ""
+  [deck a b]
+  (deck-update-wc-combos deck a b
+                         (fn [wcc]
+                           (mapv (fn [wc]
+                                 (mapv  #(assoc % :inrange? true) wc)) wcc))))
 
 (defn- deck-range-select-by-path
   "follow a path [[a b]] over the deck and selects wc up to the nlimit of combinations"
@@ -183,10 +190,7 @@
           ;; note: we might select more combos than
           ;; asked for but lets just view it as an
           ;; approximation for now
-          (let [deck (doall (deck-update-wc-combos deck a b
-                                                   (fn [wcc]
-                                                     (mapv (fn [wc]
-                                                             (mapv  #(assoc % :inrange? true) wc)) wcc))))]
+          (let [deck (deck-range-select-wc-combo deck a b)]
             (recur deck
                    (+ n (wc-combos-inrange-count
                          (deck-read-wc-combos deck a b)))
