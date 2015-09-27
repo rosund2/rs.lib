@@ -161,7 +161,7 @@
           [] deck))
 
 (defn- deck-range-select-wc-combo
-  ""
+  "sets the specified wc-combos as inrange"
   [deck a b]
   (deck-update-wc-combos deck a b
                          (fn [wcc]
@@ -229,30 +229,43 @@
           (deck-total-inrange-count deck)))))))
 
 
+(defn- make-str-from-wclist [wclist]
+  ;; First equals last
+  ;; First = AA and last (last+)
+  ;; First != AA and last (last-first)
+
+  )
+
+(defn wcc-filter-inrange
+  "takes a vector of wholecards and returns only the ones that are inrange? true"
+  [wcc] (filterv #(some :inrange? %) wcc))
 
 (defn deck-range-ppstring
   "make a pretty string of the selected range"
   [deck]
-
+  ;; Found a inrange = true
+  ;; follow path for that "type"
+  ;; if hit not found add to complete path
+  ;; and continue path
+  ;; what are the rules for the range text: Filter spec:
+  ;; AA-22 or 22+, QQ-TT , AA-44 or 4++
+  ;; All K offsuits hands K2o+
+  ;; If Ksuited hands allso included write it as Kx+
   ;; We need to follow the AA -> 23o path
+
+  ;; Range notation: http://www.pokerstrategy.com/strategy/others/2244/1/
+
+  ;; turn a path into a list of strings
+  ;; {aa,kk,qq,tt,44,33,22}
+
+  (let [range  (filterv seq
+                        ;; extracting only does wholecards which is inrange? true
+                        (mapv #(wcc-filter-inrange (deck-read-wc-combos deck % %))
+                              [0 1 2 3 4 5 6 7 8 9 10 11 12]))]
+
+    (doall range))
   )
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+#_(-> wcc
+ (update-in [0 0] (fn [x] (dissoc x :inrange? )))
+ (update-in [0 1] (fn [x] (dissoc x :inrange? ))))
