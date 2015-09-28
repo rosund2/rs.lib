@@ -4,7 +4,8 @@
 ;;http://www.blackrain79.com/2015/08/flop-strategies-versus-bad-poker.html
 ;;
 ;;M-( wrap round
-;;M-r Raise 
+;;M-r Raise
+;;C-s C-w ++ search for current
 
 (defn how-often [n1 n2]
   "calculates how often you will need to win the pot by betting. n1 = bet, n2 = pot"
@@ -56,7 +57,7 @@
 
 (defn pp
   "creates all combinations of a pocker pair"
-  [hc]
+  [hc & {:keys [value] :or {:value 169}}]
   {:pre [(string? hc) (= 2 (count (seq hc)))]}
   (let [v (.toString (first hc))]
     (into [] (for [c (make-card-variants v)
@@ -93,11 +94,11 @@
                    :when (card-same-suit? c d)]    
                [c d]))))
 
-(defn make-deck []
-  [[(pp "AA") (sc "AK") (sc "AQ") (sc "AJ") (sc "AT") (sc "A9") (sc "A8") (sc "A7") (sc "A6") (sc "A5") (sc "A4") (sc "A3") (sc "A2")]
-   [(oc "AK") (pp "KK") (sc "KQ") (sc "KJ") (sc "KT") (sc "K9") (sc "K8") (sc "K7") (sc "K6") (sc "K5") (sc "K4") (sc "K3") (sc "K2")]
-   [(oc "AQ") (oc "KQ") (pp "QQ") (sc "QJ") (sc "QT") (sc "Q9") (sc "Q8") (sc "Q7") (sc "Q6") (sc "Q5") (sc "Q4") (sc "Q3") (sc "Q2")]
-   [(oc "AJ") (oc "KJ") (oc "QJ") (pp "JJ") (sc "JT") (sc "J9") (sc "J8") (sc "J7") (sc "J6") (sc "J5") (sc "J4") (sc "J3") (sc "J2")]
+(def deck
+  [[(pp "AA" :value 1) (sc "AK" :value 5) (sc "AQ" :value 7) (sc "AJ") (sc "AT") (sc "A9") (sc "A8") (sc "A7") (sc "A6") (sc "A5") (sc "A4") (sc "A3") (sc "A2")]
+   [(oc "AK" :value 6) (pp "KK" :value 2) (sc "KQ") (sc "KJ") (sc "KT") (sc "K9") (sc "K8") (sc "K7") (sc "K6") (sc "K5") (sc "K4") (sc "K3") (sc "K2")]
+   [(oc "AQ") (oc "KQ") (pp "QQ" :value 3) (sc "QJ") (sc "QT") (sc "Q9") (sc "Q8") (sc "Q7") (sc "Q6") (sc "Q5") (sc "Q4") (sc "Q3") (sc "Q2")]
+   [(oc "AJ") (oc "KJ") (oc "QJ") (pp "JJ" :value 4) (sc "JT") (sc "J9") (sc "J8") (sc "J7") (sc "J6") (sc "J5") (sc "J4") (sc "J3") (sc "J2")]
    [(oc "AT") (oc "KT") (oc "QT") (oc "JT") (pp "TT") (sc "T9") (sc "T8") (sc "T7") (sc "T6") (sc "T5") (sc "T4") (sc "T3") (sc "T2")]
    [(oc "A9") (oc "K9") (oc "Q9") (oc "J9") (oc "T9") (pp "99") (sc "98") (sc "97") (sc "96") (sc "95") (sc "94") (sc "93") (sc "92")]
    [(oc "A8") (oc "K8") (oc "Q8") (oc "J8") (oc "T8") (oc "98") (pp "88") (sc "87") (sc "86") (sc "85") (sc "84") (sc "83") (sc "82")]
@@ -107,10 +108,6 @@
    [(oc "A4") (oc "K4") (oc "Q4") (oc "J4") (oc "T4") (oc "94") (oc "84") (oc "74") (oc "64") (oc "54") (pp "44") (sc "43") (sc "42")]
    [(oc "A3") (oc "K3") (oc "Q3") (oc "J3") (oc "T3") (oc "93") (oc "83") (oc "73") (oc "63") (oc "53") (oc "43") (pp "33") (sc "32")]
    [(oc "A2") (oc "K2") (oc "Q2") (oc "J2") (oc "T2") (oc "92") (oc "82") (oc "72") (oc "62") (oc "52") (oc "42") (oc "32") (pp "22")]])
-
-;; a specific AK KK 97 is called wholecards (wc)
-;; combinations of their suit are called wc combos
-;; [[wcc][wcc]]
 
 (defn deck-get-wcc [deck a b]
   (nth (nth deck a) b))
@@ -230,7 +227,22 @@
                      (conj akk pp) akk)              
                    )
                  ) [])))
+ 
+;; use case:
+;; 1. set hand range to 10 or 144 combos
+(let [x {":TPP" (* 6 4) ;;AA-JJ
+         ":AJ+" (* 16 3);;AK,AQ,AJ
+         ":MPP" (* 6 4) ;;TT-77
+         ":KQ-JT" (* 3 16)} ;;JT,QJ,KQ
+      ]
+  (println x)
+  (println (reduce + 0 (vals x)))
+  )
 
-#_(-> wcc
-      (update-in [0 0] (fn [x] (dissoc x :inrange? )))
-      (update-in [0 1] (fn [x] (dissoc x :inrange? ))))
+(def range->valuemap
+  [
+   ;; Top pairs from JJ++
+   {:TPP [[0 0] [1 1] [2 2] [3 3] [4 4]]}
+   ;; AKs-KJs
+   {:LSBR [[]]}
+   ])

@@ -19,16 +19,16 @@
 
 
 (deftest wholecards-combos-select []
-  (testing "selecting top pairs"
+  (testing "selecting top pairs by combos"
 
-    (let [deck (deck-range-select (make-deck) 6)]
+    (let [deck (deck-range-select deck 6)]
       (is (= 6 (wcc-inrange-count
                 (deck-get-wcc deck 0 0))) "AA should be selected")
 
       (is (= 0 (wcc-inrange-count
                 (deck-get-wcc deck 1 1))) "KK should not be selected"))
     
-    (let [deck (deck-range-select (make-deck) 12)]
+    (let [deck (deck-range-select deck 12)]
       (is (= 6 (wcc-inrange-count
                 (deck-get-wcc deck 0 0))) "AA should be selected")
       
@@ -36,7 +36,17 @@
                 (deck-get-wcc deck 1 1))) "KK should be selected")
       
       (is (= 0 (wcc-inrange-count
-                (deck-get-wcc deck 2 2))) "QQ should not be selected"))))
+                (deck-get-wcc deck 2 2))) "QQ should not be selected")))
+
+  (testing "range selection by 10% = 136 combos"
+    (let [deck (deck-range-select deck 10)]
+      ;; 88++, AJ+, KJ+ (136 combos)
+      (let [x {:TPP (* 6 7) :AJ+ (* 16 3) :JT+ (* 3 16)}]
+        (println x)
+        (println (reduce + 0 (vals x)))
+        )
+
+      )))
 
 
 
