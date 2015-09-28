@@ -47,8 +47,8 @@
           b (second (seq %2))]
 
       (if (= a b)
-        (assoc %1 :pp %2)
-        (assoc %1 :reg %2)))
+        (update-in %1 [:pp] (fnil conj []) %2)
+        (update-in %1 [:reg] (fnil conj []) %2)))
 
    {}
 
