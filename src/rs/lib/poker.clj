@@ -39,6 +39,20 @@
 
 (def suits #{:club :diamond :spade :heart})
 (def suit->str {:club "c" :diamond "d" :spade "s" :heart "h"})
+(def ranks ["A" "K" "Q" "J" "T" "9" "8" "7" "6" "5" "4" "3" "2"])
+
+(defn cards-ranks-all []
+  (reduce
+   #(let [a (first (seq %2))
+          b (second (seq %2))]
+
+      (if (= a b)
+        (assoc %1 :pp %2)
+        (assoc %1 :reg %2)))
+
+   {}
+
+   (mapcat (fn [x r] (map #(str x %) (drop r ranks))) ranks (range))))
 
 (defn make-card [rank suit]
   {:pre [(string? rank) (keyword suit)]}
@@ -57,7 +71,7 @@
 
 (defn pp
   "creates all combinations of a pocker pair"
-  [hc & {:keys [value] :or {:value 169}}]
+  [hc]
   {:pre [(string? hc) (= 2 (count (seq hc)))]}
   (let [v (.toString (first hc))]
     (into [] (for [c (make-card-variants v)
@@ -95,10 +109,10 @@
                [c d]))))
 
 (def deck
-  [[(pp "AA" :value 1) (sc "AK" :value 5) (sc "AQ" :value 7) (sc "AJ") (sc "AT") (sc "A9") (sc "A8") (sc "A7") (sc "A6") (sc "A5") (sc "A4") (sc "A3") (sc "A2")]
-   [(oc "AK" :value 6) (pp "KK" :value 2) (sc "KQ") (sc "KJ") (sc "KT") (sc "K9") (sc "K8") (sc "K7") (sc "K6") (sc "K5") (sc "K4") (sc "K3") (sc "K2")]
-   [(oc "AQ") (oc "KQ") (pp "QQ" :value 3) (sc "QJ") (sc "QT") (sc "Q9") (sc "Q8") (sc "Q7") (sc "Q6") (sc "Q5") (sc "Q4") (sc "Q3") (sc "Q2")]
-   [(oc "AJ") (oc "KJ") (oc "QJ") (pp "JJ" :value 4) (sc "JT") (sc "J9") (sc "J8") (sc "J7") (sc "J6") (sc "J5") (sc "J4") (sc "J3") (sc "J2")]
+  [[(pp "AA") (sc "AK") (sc "AQ") (sc "AJ") (sc "AT") (sc "A9") (sc "A8") (sc "A7") (sc "A6") (sc "A5") (sc "A4") (sc "A3") (sc "A2")]
+   [(oc "AK") (pp "KK") (sc "KQ") (sc "KJ") (sc "KT") (sc "K9") (sc "K8") (sc "K7") (sc "K6") (sc "K5") (sc "K4") (sc "K3") (sc "K2")]
+   [(oc "AQ") (oc "KQ") (pp "QQ") (sc "QJ") (sc "QT") (sc "Q9") (sc "Q8") (sc "Q7") (sc "Q6") (sc "Q5") (sc "Q4") (sc "Q3") (sc "Q2")]
+   [(oc "AJ") (oc "KJ") (oc "QJ") (pp "JJ") (sc "JT") (sc "J9") (sc "J8") (sc "J7") (sc "J6") (sc "J5") (sc "J4") (sc "J3") (sc "J2")]
    [(oc "AT") (oc "KT") (oc "QT") (oc "JT") (pp "TT") (sc "T9") (sc "T8") (sc "T7") (sc "T6") (sc "T5") (sc "T4") (sc "T3") (sc "T2")]
    [(oc "A9") (oc "K9") (oc "Q9") (oc "J9") (oc "T9") (pp "99") (sc "98") (sc "97") (sc "96") (sc "95") (sc "94") (sc "93") (sc "92")]
    [(oc "A8") (oc "K8") (oc "Q8") (oc "J8") (oc "T8") (oc "98") (pp "88") (sc "87") (sc "86") (sc "85") (sc "84") (sc "83") (sc "82")]
@@ -108,6 +122,17 @@
    [(oc "A4") (oc "K4") (oc "Q4") (oc "J4") (oc "T4") (oc "94") (oc "84") (oc "74") (oc "64") (oc "54") (pp "44") (sc "43") (sc "42")]
    [(oc "A3") (oc "K3") (oc "Q3") (oc "J3") (oc "T3") (oc "93") (oc "83") (oc "73") (oc "63") (oc "53") (oc "43") (pp "33") (sc "32")]
    [(oc "A2") (oc "K2") (oc "Q2") (oc "J2") (oc "T2") (oc "92") (oc "82") (oc "72") (oc "62") (oc "52") (oc "42") (oc "32") (pp "22")]])
+
+;;
+;; A good way to represent this should maybe be relative (easier to change)
+;; AA-22, AT+,A9s+, KT+, QT+, JTs-67s 
+(def valuemap ["AA"  "KK"  "QQ"  "JJ"  "TT"  "AKs" "AKo" "AQs" "AQo" "AJs" "AJo" "99"  "88"
+               "77"  "66"  "55"  "44"  "33"  "22"  "KQs" "KQo" "ATs" "ATo" "KJs" "A9s" "A8s"
+               "KJo" "KTs" "QJs" "A7s" "A6s" "A5s" "QJo" "KTo" "QTs" "QTo" "JTs" "T9s" "89s"
+               "78s" "67s" "K9s" "Q9s" "J9s" "T8s" "97s" "86s" "J8s" "T7s" "96s" "85s" "JTo"
+               "T9o" "Q8s" "K8s" "89o" "78o" 
+               ])
+
 
 (defn deck-get-wcc [deck a b]
   (nth (nth deck a) b))
@@ -239,10 +264,3 @@
   (println (reduce + 0 (vals x)))
   )
 
-(def range->valuemap
-  [
-   ;; Top pairs from JJ++
-   {:TPP [[0 0] [1 1] [2 2] [3 3] [4 4]]}
-   ;; AKs-KJs
-   {:LSBR [[]]}
-   ])

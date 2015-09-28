@@ -49,5 +49,22 @@
       )))
 
 
+#_(deftest pprint-hand-range []
+  (is (= "AA" (deck-range-ppstring (deck-range-select deck 6))))
+  (is (= "KK+" (deck-range-ppstring (deck-range-select deck 12))))
+  (is (= "44-66" (deck-range-ppstring (deck-range-select deck 6)))))
 
 
+
+(deftest value-ranges []
+  (testing "testing consistency of default value range"
+    (is (= (count valuemap) 169) "a value map should contain values for all hands")
+    (is (= (count valuemap) (count (into #{} valuemap))) "contains duplicate value")
+
+    ;; 
+    (is (empty? (filter (fn [hand] (filter #(not= hand %1) valuemap)) (let [ranks ["A" "K" "Q" "J" "T" "9" "8" "7" "6" "5" "4" "3" "2"]]
+                                                                        
+
+
+                                                                        ))))
+    ))
