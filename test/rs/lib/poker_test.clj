@@ -22,21 +22,21 @@
   (testing "selecting top pairs"
 
     (let [deck (deck-range-select (make-deck) 6)]
-      (is (= 6 (wc-combos-inrange-count
-                (deck-read-wc-combos deck 0 0))) "AA should be selected")
+      (is (= 6 (wcc-inrange-count
+                (deck-get-wcc deck 0 0))) "AA should be selected")
 
-      (is (= 0 (wc-combos-inrange-count
-                (deck-read-wc-combos deck 1 1))) "KK should not be selected"))
+      (is (= 0 (wcc-inrange-count
+                (deck-get-wcc deck 1 1))) "KK should not be selected"))
     
     (let [deck (deck-range-select (make-deck) 12)]
-      (is (= 6 (wc-combos-inrange-count
-                (deck-read-wc-combos deck 0 0))) "AA should be selected")
+      (is (= 6 (wcc-inrange-count
+                (deck-get-wcc deck 0 0))) "AA should be selected")
       
-      (is (= 6 (wc-combos-inrange-count
-                (deck-read-wc-combos deck 1 1))) "KK should be selected")
+      (is (= 6 (wcc-inrange-count
+                (deck-get-wcc deck 1 1))) "KK should be selected")
       
-      (is (= 0 (wc-combos-inrange-count
-                (deck-read-wc-combos deck 2 2))) "QQ should not be selected"))))
+      (is (= 0 (wcc-inrange-count
+                (deck-get-wcc deck 2 2))) "QQ should not be selected"))))
 
 
 

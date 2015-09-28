@@ -12,41 +12,6 @@
 
 (def total-combos (/ (* 52 51) 2))
 
-#_(defn how-many-combos [v] "[AKs]")
-
-;; Question: if opponent raises 80% of hands, what does that range look like ?
-;; If opponent raises 80% of hands and calls raise with 20% of hands
-
-
-;; MP opens
-;; 22+,A8s+,KTs+,QJs,T9s,98s, AJo+,KJo+ = 181 combinations
-
-;; If we 3bet:
-;; 4bets: QQ+,AKs = 22 combinations. We fold.
-;; calls: 77-JJ,AQ+,98s,T9s = 61 combinations
-;; folds: everything else = 98 combinations
-;; EV(MP folds/4bets)=
-;;                     22/181*(-6)
-;;                   + 98/181*2
-;;                   = -0.72+1.08=0.36
-
-;; On the flop:
-;; We cbet, he
-;; calls: JJ,TT(will raise turn),T9 = 16 (our equity 9%, assume 0%)
-;; raises: AKo = 12 
-;; folds: AQ,98s,77-99 = 33
-;; EV(calls preflop; call+raise+fold)=(16+12)/181*(-12) + 33/181*6 = -1.81+1.09 = -0.79
-
-;; Total EV=-0.43
-
-;; So 3betting against this range doesn't seem to be profitable. But if we were up against a loose button raiser who also raises 56s-78s, A2s-A7s, A8o-ATo+,98o and other stuff we can add at least 100 handcombinations to his range that he will have to fold preflop. 
-
-;; In that case the total EV is
-;; 22/281*(-2)+28/281*(-12)+33/281*(6)+198/281*2=
-;; -0.15-1.2+0.7+1.4 = 0.75.
-
-;; So when the openraiser has a tight range, 3betting is not good. If he's looser 3betting is +EV. On top of that calling is worse in the second case, because a lot of his range won't stack off if we hit a set. 
-
 (defn probability [o a] (/ o a))
 
 (defn equity-of-raise [openc foldc raisec pot raise]
@@ -70,7 +35,9 @@
 ;;            {"A" ::diamond} ;;
 ;;            {"A" ::spade}]) ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (def suits #{:club :diamond :spade :heart})
+(def suit->str {:club "c" :diamond "d" :spade "s" :heart "h"})
 
 (defn make-card [rank suit]
   {:pre [(string? rank) (keyword suit)]}
@@ -141,32 +108,40 @@
    [(oc "A3") (oc "K3") (oc "Q3") (oc "J3") (oc "T3") (oc "93") (oc "83") (oc "73") (oc "63") (oc "53") (oc "43") (pp "33") (sc "32")]
    [(oc "A2") (oc "K2") (oc "Q2") (oc "J2") (oc "T2") (oc "92") (oc "82") (oc "72") (oc "62") (oc "52") (oc "42") (oc "32") (pp "22")]])
 
-;; a specific AK KK 97 is called wholecards wc
+;; a specific AK KK 97 is called wholecards (wc)
 ;; combinations of their suit are called wc combos
+;; [[wcc][wcc]]
 
-(defn deck-read-wc-combos [deck a b]
+(defn deck-get-wcc [deck a b]
   (nth (nth deck a) b))
 
-(defn wc-combos-inrange-count [wcc]
+(defn wcc-inrange-count [wcc]
   (count (filter (fn [wc] (some :inrange? wc)) wcc)))
 
-(defn deck-update-wc-combos [deck a b f]
-     (update-in deck [a b] f ))
+(defn wcc-matcher [f wcc] (some f wcc))
 
-(defn deck-flatten-to-wc [deck]
+(def wcc-matcher-inrange? (partial wcc-matcher :inrange?))
+
+(defn wcc-map-card [f wcc]
+  (mapv #(mapv f %) wcc))
+
+(defn deck-update-wcc [deck a b f]
+  (update-in deck [a b] f ))
+
+(defn deck-flatten-to-wc
+  "Flattes the deck to a list of wholecards"
+  [deck]
   (reduce (fn [total-combos range]
             (reduce (fn [combos combo]
                       (reduce conj combos combo))
                     total-combos range))
           [] deck))
 
-(defn- deck-range-select-wc-combo
-  "sets the specified wc-combos as inrange"
+(defn- deck-range-select-wcc
+  "sets the specified wholecards in the wc combo collections to inrange? true"
   [deck a b]
-  (deck-update-wc-combos deck a b
-                         (fn [wcc]
-                           (mapv (fn [wc]
-                                 (mapv  #(assoc % :inrange? true) wc)) wcc))))
+  (deck-update-wcc deck a b
+                   (fn [wcc] (wcc-map-card #(assoc % :inrange? true) wcc))))
 
 (defn- deck-range-select-by-path
   "follow a path [[a b]] over the deck and selects wc up to the nlimit of combinations"
@@ -190,10 +165,10 @@
           ;; note: we might select more combos than
           ;; asked for but lets just view it as an
           ;; approximation for now
-          (let [deck (deck-range-select-wc-combo deck a b)]
+          (let [deck (deck-range-select-wcc deck a b)]
             (recur deck
-                   (+ n (wc-combos-inrange-count
-                         (deck-read-wc-combos deck a b)))
+                   (+ n (wcc-inrange-count
+                         (deck-get-wcc deck a b)))
                    (rest path)))))))
 
 
@@ -202,7 +177,7 @@
   "count the number of selected combos in the deck"
   [deck]
   (reduce (fn [count wc]
-            (if (seq (filter :selected? wc))
+            (if (seq (filter :inrange? wc))
               (inc count) count)
             ) 0 (deck-flatten-to-wc deck)))
 
@@ -213,7 +188,7 @@
   [deck nc]
 
   (let
-      ;; Top pair combos AA,KK,QQ,JJ
+      ;; Top pairs: AA,KK,QQ,JJ
       [top-pair-coords [[0 0] [1 1] [2 2] [3 3] [4 4]]] 
 
       (loop [methods [#(deck-range-select-by-path %1 top-pair-coords %2)]
@@ -229,43 +204,33 @@
           (deck-total-inrange-count deck)))))))
 
 
-(defn- make-str-from-wclist [wclist]
-  ;; First equals last
-  ;; First = AA and last (last+)
-  ;; First != AA and last (last-first)
-
-  )
-
-(defn wcc-filter-inrange
-  "takes a vector of wholecards and returns only the ones that are inrange? true"
-  [wcc] (filterv #(some :inrange? %) wcc))
-
 (defn deck-range-ppstring
-  "make a pretty string of the selected range"
+  "make a pretty string of the selected range.
+  notation should be inline with 
+  http://www.pokerstrategy.com/strategy/others/2244/1/"
+
   [deck]
-  ;; Found a inrange = true
-  ;; follow path for that "type"
-  ;; if hit not found add to complete path
-  ;; and continue path
-  ;; what are the rules for the range text: Filter spec:
-  ;; AA-22 or 22+, QQ-TT , AA-44 or 4++
-  ;; All K offsuits hands K2o+
-  ;; If Ksuited hands allso included write it as Kx+
-  ;; We need to follow the AA -> 23o path
 
-  ;; Range notation: http://www.pokerstrategy.com/strategy/others/2244/1/
+  (->> (mapv #(deck-get-wcc deck % %) ;create a vector with a path of wcc's
+             [0 1 2 3 4 5 6 7 8 9 10 11 12])
 
-  ;; turn a path into a list of strings
-  ;; {aa,kk,qq,tt,44,33,22}
+       ;;filter out wc that are not inrange?
+       (mapv #(filterv wcc-matcher-inrange? %))  
 
-  (let [range  (filterv seq
-                        ;; extracting only does wholecards which is inrange? true
-                        (mapv #(wcc-filter-inrange (deck-read-wc-combos deck % %))
-                              [0 1 2 3 4 5 6 7 8 9 10 11 12]))]
+       ;; filter out empty vectors
+       (filterv seq) 
 
-    (doall range))
-  )
+       ;; flatten to wholecard level
+       (reduce (fn [akk wc] (apply conj akk wc)) [])
+
+       ;; reduce to a vector of wholecards (no suit)
+       (reduce (fn [akk [a b]]
+                 (let [pp (str (:rank a) (:rank b))]
+                   (if-not (some #(= % pp) akk)
+                     (conj akk pp) akk)              
+                   )
+                 ) [])))
 
 #_(-> wcc
- (update-in [0 0] (fn [x] (dissoc x :inrange? )))
- (update-in [0 1] (fn [x] (dissoc x :inrange? ))))
+      (update-in [0 0] (fn [x] (dissoc x :inrange? )))
+      (update-in [0 1] (fn [x] (dissoc x :inrange? ))))
