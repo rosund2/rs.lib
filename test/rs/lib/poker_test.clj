@@ -61,10 +61,5 @@
     (is (= (count valuemap) 169) "a value map should contain values for all hands")
     (is (= (count valuemap) (count (into #{} valuemap))) "contains duplicate value")
 
-    ;; 
-    (is (empty? (filter (fn [hand] (filter #(not= hand %1) valuemap)) (let [ranks ["A" "K" "Q" "J" "T" "9" "8" "7" "6" "5" "4" "3" "2"]]
-                                                                        
-
-
-                                                                        ))))
-    ))
+    (is (empty? (clojure.set/difference (apply hash-set all-card-ranks) (apply hash-set valuemap))) "value map should contain all hands")
+    (is (empty? (clojure.set/difference (apply hash-set valuemap) (apply hash-set all-card-ranks) )) "value map should not contain hand values that are not allowed")))

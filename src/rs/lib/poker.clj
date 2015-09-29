@@ -41,18 +41,22 @@
 (def suit->str {:club "c" :diamond "d" :spade "s" :heart "h"})
 (def ranks ["A" "K" "Q" "J" "T" "9" "8" "7" "6" "5" "4" "3" "2"])
 
-(defn cards-ranks-all []
-  (reduce
-   #(let [a (first (seq %2))
-          b (second (seq %2))]
-
-      (if (= a b)
-        (update-in %1 [:pp] (fnil conj []) %2)
-        (update-in %1 [:reg] (fnil conj []) %2)))
-
-   {}
-
-   (mapcat (fn [x r] (map #(str x %) (drop r ranks))) ranks (range))))
+(def all-card-ranks
+  "a generated  list of all hand combos"
+  (let [m (-> (reduce
+               #(let [a (first (seq %2))
+                      b (second (seq %2))]
+                  (if (= a b)
+                    (update-in %1 [:pp] (fnil conj []) %2)
+                    (update-in %1 [:reg] (fnil conj []) %2)))
+               {}
+               (mapcat (fn [x r] (map #(str x %) (drop r ranks))) ranks (range)))
+              (#(assoc %1 :sc (:reg %1))))]
+    
+    (->>
+     (into [] (:pp m))
+     (into  (map #(str % "o") (:reg m)))
+     (into (map #(str % "s") (:sc m))))))
 
 (defn make-card [rank suit]
   {:pre [(string? rank) (keyword suit)]}
