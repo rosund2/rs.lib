@@ -127,15 +127,28 @@
    [(oc "A3") (oc "K3") (oc "Q3") (oc "J3") (oc "T3") (oc "93") (oc "83") (oc "73") (oc "63") (oc "53") (oc "43") (pp "33") (sc "32")]
    [(oc "A2") (oc "K2") (oc "Q2") (oc "J2") (oc "T2") (oc "92") (oc "82") (oc "72") (oc "62") (oc "52") (oc "42") (oc "32") (pp "22")]])
 
+(def pre-all-in-ranking
+  "ranking of hands from best to lowest
+  taken from http://holdemtight.com/pgs/od/oddpgs/3-169holdemhands.htm" 
+  [
+   "AA" "KK" "QQ" "AKs" "JJ" "AQs" "KQs" "AJs" "KJs" "TT" "AKo" 
+   "ATs" "QJs" "KTs" "QTs" "JTs" "99" "AQo" "A9s" "KQo" "88" 
+   "K9s" "T9s" "A8s" "Q9s" "J9s" "AJo" "A5s" "77" "A7s" "KJo" 
+   "A4s" "A3s" "A6s" "QJo" "66" "K8s" "T8s" "A2s" "98s" "J8s" 
+   "ATo" "Q8s" "K7s" "KTo" "55" "JTo" "87s" "QTo" "44" "22" 
+   "33" "K6s" "97s" "K5s" "76s" "T7s" "K4s" "K2s" "K3s" "Q7s" 
+   "86s" "65s" "J7s" "54s" "Q6s" "75s" "96s" "Q5s" "64s" "Q4s" 
+   "Q3s" "T9o" "T6s" "Q2s" "A9o" "53s" "85s" "J6s" "J9o" "K9o" 
+   "J5s" "Q9o" "43s" "74s" "J4s" "J3s" "95s" "J2s" "63s" "A8o" 
+   "52s" "T5s" "84s" "T4s" "T3s" "42s" "T2s" "98o" "T8o" "A5o" 
+   "A7o" "73s" "A4o" "32s" "94s" "93s" "J8o" "A3o" "62s" "92s" 
+   "K8o" "A6o" "87o" "Q8o" "83s" "A2o" "82s" "97o" "72s" "76o" 
+   "K7o" "65o" "T7o" "K6o" "86o" "54o" "K5o" "J7o" "75o" "Q7o" 
+   "K4o" "K3o" "96o" "K2o" "64o" "Q6o" "53o" "85o" "T6o" "Q5o" 
+   "43o" "Q4o" "Q3o" "74o" "Q2o" "J6o" "63o" "J5o" "95o" "52o" 
+   "J4o" "J3o" "42o" "J2o" "84o" "T5o" "T4o" "32o" "T3o" "73o" 
+   "T2o" "62o" "94o" "93o" "92o" "83o" "82o" "72o"])
 
-(def wc-value-ratingv
-  "the value of the different wholecards combos from most valued to least"
-  ["AA"  "KK"  "QQ"  "JJ"  "TT"  "AKs" "AKo" "AQs" "AQo" "AJs" "AJo" "99"  "88"
-   "77"  "66"  "55"  "44"  "33"  "22"  "KQs" "KQo" "ATs" "ATo" "KJs" "A9s" "A8s"
-   "KJo" "KTs" "QJs" "A7s" "A6s" "A5s" "QJo" "KTo" "QTs" "QTo" "JTs" "T9s" "89s"
-   "78s" "67s" "K9s" "Q9s" "J9s" "T8s" "97s" "86s" "J8s" "T7s" "96s" "85s" "JTo"
-   "T9o" "Q8s" "K8s" "89o" "78o" 
-   ])
 
 
 (defn deck-get-wcc
@@ -270,6 +283,7 @@
          ":KQ-JT" (* 3 16)} ;;JT,QJ,KQ
       ]
   (println x)
-  (println (reduce + 0 (vals x)))
-  )
+  (println (reduce + 0 (vals x))))
+
+
 

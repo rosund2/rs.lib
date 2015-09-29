@@ -58,11 +58,10 @@
   (is (= "44-66" (deck-range-ppstring (deck-range-select deck 6)))))
 
 
-
 (deftest value-ranges []
   (testing "testing consistency of default value range"
-    (is (= (count wc-value-ratingv) 169) "a value map should contain values for all hands")
-    (is (= (count wc-value-ratingv) (count (into #{} wc-value-ratingv))) "contains duplicate value")
+    (is (= (count pre-all-in-ranking) 169) "a value map should contain values for all hands")
+    (is (= (count pre-all-in-ranking) (count (into #{} pre-all-in-ranking))) "contains duplicate value")
 
-    (is (empty? (clojure.set/difference (apply hash-set all-card-ranks) (apply hash-set wc-value-ratingv))) "value map should contain all hands")
-    (is (empty? (clojure.set/difference (apply hash-set wc-value-ratingv) (apply hash-set all-card-ranks) )) "value map should not contain hand values that are not allowed")))
+    (is (empty? (clojure.set/difference (apply hash-set all-card-ranks) (apply hash-set pre-all-in-ranking))) "value map should contain all hands")
+    (is (empty? (clojure.set/difference (apply hash-set pre-all-in-ranking) (apply hash-set all-card-ranks) )) "value map should not contain hand values that are not allowed")))
