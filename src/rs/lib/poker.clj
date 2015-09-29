@@ -167,10 +167,13 @@
   "predicate to check if any of the cards in a combo is inrange?"
   (partial wcc-matcher :inrange?))
 
+
 (defn map2v
   "applies f to all the values in a nested seq"
   [f v]
   (mapv #(mapv f %) v))
+
+
 
 (defn deck-flatten-to-wc
   "Flattens the deck to a list of wholecards"
@@ -181,11 +184,15 @@
                     total-combos range))
           [] deck))
 
+
+
 (defn- deck-range-select-wcc
   "sets the specified wholecards in the wc combo collections to inrange? true"
   [deck a b]
   (update-in deck [a b]
              (fn [wcc] (map2v #(assoc % :inrange? true) wcc))))
+
+
 
 (defn- deck-range-select-by-path
   "follow a path [[a b]] over the deck and selects wc up to the nlimit of combinations"
@@ -248,6 +255,7 @@
           (deck-wc-inrange-count deck)))))))
 
 
+
 (defn deck-range-ppstring
   "make a pretty string of the selected range.
   notation should be inline with 
@@ -255,6 +263,7 @@
 
   [deck]
 
+  ;; Pocket pairs
   (->> (mapv #(deck-get-wcc deck % %) ;create a vector with a path of wcc's
              [0 1 2 3 4 5 6 7 8 9 10 11 12])
 
@@ -277,13 +286,6 @@
  
 ;; use case:
 ;; 1. set hand range to 10 or 144 combos
-(let [x {":TPP" (* 6 4) ;;AA-JJ
-         ":AJ+" (* 16 3);;AK,AQ,AJ
-         ":MPP" (* 6 4) ;;TT-77
-         ":KQ-JT" (* 3 16)} ;;JT,QJ,KQ
-      ]
-  (println x)
-  (println (reduce + 0 (vals x))))
 
 
 
