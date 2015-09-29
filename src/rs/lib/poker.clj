@@ -127,35 +127,40 @@
    [(oc "A3") (oc "K3") (oc "Q3") (oc "J3") (oc "T3") (oc "93") (oc "83") (oc "73") (oc "63") (oc "53") (oc "43") (pp "33") (sc "32")]
    [(oc "A2") (oc "K2") (oc "Q2") (oc "J2") (oc "T2") (oc "92") (oc "82") (oc "72") (oc "62") (oc "52") (oc "42") (oc "32") (pp "22")]])
 
-;;
-;; A good way to represent this should maybe be relative (easier to change)
-;; AA-22, AT+,A9s+, KT+, QT+, JTs-67s 
-(def valuemap ["AA"  "KK"  "QQ"  "JJ"  "TT"  "AKs" "AKo" "AQs" "AQo" "AJs" "AJo" "99"  "88"
-               "77"  "66"  "55"  "44"  "33"  "22"  "KQs" "KQo" "ATs" "ATo" "KJs" "A9s" "A8s"
-               "KJo" "KTs" "QJs" "A7s" "A6s" "A5s" "QJo" "KTo" "QTs" "QTo" "JTs" "T9s" "89s"
-               "78s" "67s" "K9s" "Q9s" "J9s" "T8s" "97s" "86s" "J8s" "T7s" "96s" "85s" "JTo"
-               "T9o" "Q8s" "K8s" "89o" "78o" 
-               ])
+
+(def wc-value-ratingv
+  "the value of the different wholecards combos from most valued to least"
+  ["AA"  "KK"  "QQ"  "JJ"  "TT"  "AKs" "AKo" "AQs" "AQo" "AJs" "AJo" "99"  "88"
+   "77"  "66"  "55"  "44"  "33"  "22"  "KQs" "KQo" "ATs" "ATo" "KJs" "A9s" "A8s"
+   "KJo" "KTs" "QJs" "A7s" "A6s" "A5s" "QJo" "KTo" "QTs" "QTo" "JTs" "T9s" "89s"
+   "78s" "67s" "K9s" "Q9s" "J9s" "T8s" "97s" "86s" "J8s" "T7s" "96s" "85s" "JTo"
+   "T9o" "Q8s" "K8s" "89o" "78o" 
+   ])
 
 
-(defn deck-get-wcc [deck a b]
+(defn deck-get-wcc
+  "retrieves a wholecard combo from a given deck position"
+  [deck a b]
   (nth (nth deck a) b))
 
-(defn wcc-inrange-count [wcc]
+(defn wcc-inrange-count
+  "counts the number of wholecards which is nominated as inrange in combo"
+  [wcc]
   (count (filter (fn [wc] (some :inrange? wc)) wcc)))
 
 (defn wcc-matcher [f wcc] (some f wcc))
 
-(def wcc-matcher-inrange? (partial wcc-matcher :inrange?))
+(def wcc-matcher-inrange?
+  "predicate to check if any of the cards in a combo is inrange?"
+  (partial wcc-matcher :inrange?))
 
-(defn wcc-map-card [f wcc]
-  (mapv #(mapv f %) wcc))
-
-(defn deck-update-wcc [deck a b f]
-  (update-in deck [a b] f ))
+(defn map2v
+  "applies f to all the values in a nested seq"
+  [f v]
+  (mapv #(mapv f %) v))
 
 (defn deck-flatten-to-wc
-  "Flattes the deck to a list of wholecards"
+  "Flattens the deck to a list of wholecards"
   [deck]
   (reduce (fn [total-combos range]
             (reduce (fn [combos combo]
@@ -166,8 +171,8 @@
 (defn- deck-range-select-wcc
   "sets the specified wholecards in the wc combo collections to inrange? true"
   [deck a b]
-  (deck-update-wcc deck a b
-                   (fn [wcc] (wcc-map-card #(assoc % :inrange? true) wcc))))
+  (update-in deck [a b]
+             (fn [wcc] (map2v #(assoc % :inrange? true) wcc))))
 
 (defn- deck-range-select-by-path
   "follow a path [[a b]] over the deck and selects wc up to the nlimit of combinations"
@@ -199,8 +204,8 @@
 
 
 
-(defn deck-total-inrange-count
-  "count the number of selected combos in the deck"
+(defn deck-wc-inrange-count
+  "count the number of inrange combos in the deck"
   [deck]
   (reduce (fn [count wc]
             (if (seq (filter :inrange? wc))
@@ -227,7 +232,7 @@
          (recur
           (rest methods)
           deck
-          (deck-total-inrange-count deck)))))))
+          (deck-wc-inrange-count deck)))))))
 
 
 (defn deck-range-ppstring

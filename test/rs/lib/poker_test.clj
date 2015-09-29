@@ -44,9 +44,12 @@
       (let [x {:TPP (* 6 7) :AJ+ (* 16 3) :JT+ (* 3 16)}]
         (println x)
         (println (reduce + 0 (vals x)))
-        )
+        )))
 
-      )))
+  (testing "range count calculations"
+    ;; deck-total-inrange-count
+    (let [deck (deck-range-select deck 10)]
+      (is (= 10 (deck-wc-inrange-count deck)) "ten wc should be selected"))))
 
 
 #_(deftest pprint-hand-range []
@@ -58,8 +61,8 @@
 
 (deftest value-ranges []
   (testing "testing consistency of default value range"
-    (is (= (count valuemap) 169) "a value map should contain values for all hands")
-    (is (= (count valuemap) (count (into #{} valuemap))) "contains duplicate value")
+    (is (= (count wc-value-ratingv) 169) "a value map should contain values for all hands")
+    (is (= (count wc-value-ratingv) (count (into #{} wc-value-ratingv))) "contains duplicate value")
 
-    (is (empty? (clojure.set/difference (apply hash-set all-card-ranks) (apply hash-set valuemap))) "value map should contain all hands")
-    (is (empty? (clojure.set/difference (apply hash-set valuemap) (apply hash-set all-card-ranks) )) "value map should not contain hand values that are not allowed")))
+    (is (empty? (clojure.set/difference (apply hash-set all-card-ranks) (apply hash-set wc-value-ratingv))) "value map should contain all hands")
+    (is (empty? (clojure.set/difference (apply hash-set wc-value-ratingv) (apply hash-set all-card-ranks) )) "value map should not contain hand values that are not allowed")))
