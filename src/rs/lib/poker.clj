@@ -113,34 +113,36 @@
                [c d]))))
 
 
+
+
+
 (defmacro coord-gen
   "parses a deck and constructs a wholecard combo name to deck coord map"
   [deck]
-  (cons '-> (cons {}
-                  (mapcat
-                   (fn [row r1]
-                     (map (fn [col r2]
-                            `(assoc
-                              ~(let [s (resolve (first col))]                                 
-                                 (cond
-                                   (= s #'pp)
-                                   (second col)
-                                   (= s #'oc)
-                                   (str (second col) "o")
-                                   (= s #'sc)
-                                   (str (second col) "s")))
-                                 [~r1 ~r2]))
-                            row (range))     
-                     ) deck (range)))))
+  (apply list '-> {}
+         (mapcat
+          (fn [row r1]
+            (map (fn [col r2]
+                   `(assoc
+                     ~(let [s (resolve (first col))
+                            ranks (second col) ]                                 
+                        (cond
+                          (= s #'pp)
+                          ranks
+                          (= s #'oc)
+                          (str ranks "o")
+                          (= s #'sc)
+                          (str ranks "s")))
+                     [~r1 ~r2]))
+                 row (range))     
+            ) deck (range))))
 
 (defmacro defdeck
-  "defs the as name, but parses the deck definition and defs a map deckname->map "
+  "defs the deck as name, and parses the deck definition and defs a deckname->map "
   [ name & deck]  
   `(do
     (def ~name ~@deck)
-    (def
-      ~(symbol (str name "->map"))
-      (coord-gen ~(first deck)))))
+    (def ~(symbol (str name "->map")) (coord-gen ~(first deck)))))
 
 (defdeck deck
   [[(pp "AA") (sc "AK") (sc "AQ") (sc "AJ") (sc "AT") (sc "A9") (sc "A8") (sc "A7") (sc "A6") (sc "A5") (sc "A4") (sc "A3") (sc "A2")]
@@ -185,6 +187,11 @@
    "J4o" "J3o" "42o" "J2o" "84o" "T5o" "T4o" "32o" "T3o" "73o" 
    "T2o" "62o" "94o" "93o" "92o" "83o" "82o" "72o"])
 
+(defn rank-seq [rankv coordm]
+  (when (seq rankv)
+    (cons (coordm (first rankv))
+          (lazy-seq
+           (rank-seq (rest rankv) coordm)))))
 
 (defn wcc-inrange-count
   "counts the number of wholecards which is nominated as inrange in combo"
@@ -264,26 +271,23 @@
 
 (defn deck-range-select
   "selects a number of wholecards combos in a deck based on best to worse"
-  [deck nc]
+  [deck rankv nc]
 
-  (let
-      ;; Top pairs: AA,KK,QQ,JJ
-      [top-pair-coords [[0 0] [1 1] [2 2] [3 3] [4 4]]] 
-
-      (loop [methods [#(deck-range-select-by-path %1 top-pair-coords %2)]
-          deck deck
-          count 0]
-     (if (or (empty? methods)
-             (>= count nc))
-       deck
-       (let [deck ((first methods) deck (- nc count))]
-         (recur
-          (rest methods)
-          deck
-          (deck-wc-inrange-count deck)))))))
+  (loop [methods [#(deck-range-select-by-path %1 rankv %2)]
+         deck deck
+         count 0]
+    (if (or (empty? methods)
+            (>= count nc))
+      deck
+      (let [deck ((first methods) deck (- nc count))]
+        (recur
+         (rest methods)
+         deck
+         (deck-wc-inrange-count deck))))))
 
 
-
+;; Not done
+;; Algorithm: 
 (defn deck-range-ppstring
   "make a pretty string of the selected range.
   notation should be inline with 
@@ -291,29 +295,17 @@
 
   [deck]
 
-  ;; Pocket pairs
-  (->> (mapv #(deck-get-wcc deck % %) ;create a vector with a path of wcc's
-             [0 1 2 3 4 5 6 7 8 9 10 11 12])
+  (map2v (fn [x]           
+           x
+           ) deck)
+  ;; walk-deck-by-path rankv
+  #_(map (fn [x]        
+         (let [wcc (deck-get-wcc deck (first x) (second x))]
+           "AA"
+           ))
 
-       ;;filter out wc that are not inrange?
-       (mapv #(filterv wcc-matcher-inrange? %))  
+       (deck))
+  ;; make-wcc-pp-string 
 
-       ;; filter out empty vectors
-       (filterv seq) 
-
-       ;; flatten to wholecard level
-       (reduce (fn [akk wc] (apply conj akk wc)) [])
-
-       ;; reduce to a vector of wholecards (no suit)
-       (reduce (fn [akk [a b]]
-                 (let [pp (str (:rank a) (:rank b))]
-                   (if-not (some #(= % pp) akk)
-                     (conj akk pp) akk)              
-                   )
-                 ) [])))
+  )
  
-;; use case:
-;; 1. set hand range to 10 or 144 combos
-
-
-
