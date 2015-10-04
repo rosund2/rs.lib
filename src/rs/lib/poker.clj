@@ -112,7 +112,37 @@
                    :when (card-same-suit? c d)]    
                [c d]))))
 
-(def deck
+
+(defmacro coord-gen
+  "parses a deck and constructs a wholecard combo name to deck coord map"
+  [deck]
+  (cons '-> (cons {}
+                  (mapcat
+                   (fn [row r1]
+                     (map (fn [col r2]
+                            `(assoc
+                              ~(let [s (resolve (first col))]                                 
+                                 (cond
+                                   (= s #'pp)
+                                   (second col)
+                                   (= s #'oc)
+                                   (str (second col) "o")
+                                   (= s #'sc)
+                                   (str (second col) "s")))
+                                 [~r1 ~r2]))
+                            row (range))     
+                     ) deck (range)))))
+
+(defmacro defdeck
+  "defs the as name, but parses the deck definition and defs a map deckname->map "
+  [ name & deck]  
+  `(do
+    (def ~name ~@deck)
+    (def
+      ~(symbol (str name "->map"))
+      (coord-gen ~(first deck)))))
+
+(defdeck deck
   [[(pp "AA") (sc "AK") (sc "AQ") (sc "AJ") (sc "AT") (sc "A9") (sc "A8") (sc "A7") (sc "A6") (sc "A5") (sc "A4") (sc "A3") (sc "A2")]
    [(oc "AK") (pp "KK") (sc "KQ") (sc "KJ") (sc "KT") (sc "K9") (sc "K8") (sc "K7") (sc "K6") (sc "K5") (sc "K4") (sc "K3") (sc "K2")]
    [(oc "AQ") (oc "KQ") (pp "QQ") (sc "QJ") (sc "QT") (sc "Q9") (sc "Q8") (sc "Q7") (sc "Q6") (sc "Q5") (sc "Q4") (sc "Q3") (sc "Q2")]
@@ -126,6 +156,12 @@
    [(oc "A4") (oc "K4") (oc "Q4") (oc "J4") (oc "T4") (oc "94") (oc "84") (oc "74") (oc "64") (oc "54") (pp "44") (sc "43") (sc "42")]
    [(oc "A3") (oc "K3") (oc "Q3") (oc "J3") (oc "T3") (oc "93") (oc "83") (oc "73") (oc "63") (oc "53") (oc "43") (pp "33") (sc "32")]
    [(oc "A2") (oc "K2") (oc "Q2") (oc "J2") (oc "T2") (oc "92") (oc "82") (oc "72") (oc "62") (oc "52") (oc "42") (oc "32") (pp "22")]])
+
+
+(defn deck-get-wcc
+  "retrieves a wholecard combo from a given deck position"
+  [deck a b]
+  (nth (nth deck a) b))
 
 (def pre-all-in-ranking
   "ranking of hands from best to lowest
@@ -149,12 +185,6 @@
    "J4o" "J3o" "42o" "J2o" "84o" "T5o" "T4o" "32o" "T3o" "73o" 
    "T2o" "62o" "94o" "93o" "92o" "83o" "82o" "72o"])
 
-
-
-(defn deck-get-wcc
-  "retrieves a wholecard combo from a given deck position"
-  [deck a b]
-  (nth (nth deck a) b))
 
 (defn wcc-inrange-count
   "counts the number of wholecards which is nominated as inrange in combo"
@@ -185,13 +215,11 @@
           [] deck))
 
 
-
 (defn- deck-range-select-wcc
   "sets the specified wholecards in the wc combo collections to inrange? true"
   [deck a b]
   (update-in deck [a b]
              (fn [wcc] (map2v #(assoc % :inrange? true) wcc))))
-
 
 
 (defn- deck-range-select-by-path
