@@ -7,42 +7,18 @@
 ;;M-r Raise
 ;;C-s C-w ++ search for current
 
-(defn how-often [n1 n2]
-  "calculates how often you will need to win the pot by betting. n1 = bet, n2 = pot"
-  (/ n1 (+ n1 n2)))
 
-(def total-combos (/ (* 52 51) 2))
-
-(defn probability [o a] (/ o a))
-
-(defn equity-of-raise [openc foldc raisec pot raise]
-  (+
-     ;; Loose the pot
-   (* (- raise) (probability raisec openc))
-     ;; Win the pot
-   (* (+ pot) (probability foldc openc))))
-
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; what a range look like                          ;;
-;; (def hand-range ["A3s+" "A3o+" "Ac3o+" "AcKs"]) ;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; (def cards [{"A" ::club}    ;;
-;;            {"A" ::heart}   ;;
-;;            {"A" ::diamond} ;;
-;;            {"A" ::spade}]) ;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defn- map2v
+  "applies f to all the values in a nested seq"
+  [f v]
+  (mapv #(mapv f %) v))
 
 (def suits #{:club :diamond :spade :heart})
 (def suit->str {:club "c" :diamond "d" :spade "s" :heart "h"})
 (def ranks ["A" "K" "Q" "J" "T" "9" "8" "7" "6" "5" "4" "3" "2"])
 
 (def all-card-ranks
-  "a generated  list of all hand combos"
+  "a list of all hand combos"
   (let [m (-> (reduce
                #(let [a (first (seq %2))
                       b (second (seq %2))]
@@ -55,7 +31,7 @@
     
     (->>
      (into [] (:pp m))
-     (into  (map #(str % "o") (:reg m)))
+     (into (map #(str % "o") (:reg m)))
      (into (map #(str % "s") (:sc m))))))
 
 (defn make-card [rank suit]
@@ -65,13 +41,13 @@
 (defn card-same-suit? [a b]
   (= (:suit a) (:suit b)))
 
-(defn make-card-variants
+(defn- make-card-variants
   "makes all the variants for a card (Ac, Ad, As, Ah) ie"
-  [v]
-  {:pre [(string? v)]}
+  [rank]
+  {:pre [(string? rank)]}
   (into [] (for [suit suits
-                 rank [v]]
-             (make-card rank suit))))
+                 rankv [rank]]
+             (make-card rankv suit))))
 
 (defn pp
   "creates all combinations of a pocker pair"
@@ -113,10 +89,7 @@
                [c d]))))
 
 
-
-
-
-(defmacro coord-gen
+(defmacro make-deck-map
   "parses a deck and constructs a wholecard combo name to deck coord map"
   [deck]
   (apply list '-> {}
@@ -138,11 +111,11 @@
             ) deck (range))))
 
 (defmacro defdeck
-  "defs the deck as name, and parses the deck definition and defs a deckname->map "
+  "defs a deck"
   [ name & deck]  
-  `(do
-    (def ~name ~@deck)
-    (def ~(symbol (str name "->map")) (coord-gen ~(first deck)))))
+  `(def ~name
+     {:cards ~@deck
+      :map (make-deck-map ~(first deck))}))
 
 (defdeck deck
   [[(pp "AA") (sc "AK") (sc "AQ") (sc "AJ") (sc "AT") (sc "A9") (sc "A8") (sc "A7") (sc "A6") (sc "A5") (sc "A4") (sc "A3") (sc "A2")]
@@ -162,10 +135,10 @@
 
 (defn deck-get-wcc
   "retrieves a wholecard combo from a given deck position"
-  [deck a b]
-  (nth (nth deck a) b))
+  [{:keys [cards]} a b]
+  (nth (nth cards a) b))
 
-(def pre-all-in-ranking
+(def hand-ranks
   "ranking of hands from best to lowest
   taken from http://holdemtight.com/pgs/od/oddpgs/3-169holdemhands.htm" 
   [
@@ -187,75 +160,60 @@
    "J4o" "J3o" "42o" "J2o" "84o" "T5o" "T4o" "32o" "T3o" "73o" 
    "T2o" "62o" "94o" "93o" "92o" "83o" "82o" "72o"])
 
-(defn rank-seq [rankv coordm]
+(defn rank-seq
+  "Creates a highest to lowest coord map into a deck based on the deck map and a ranking vector"
+  [deck rankv]
+  {:pre [(map? deck) (map? (:map deck))]}
   (when (seq rankv)
-    (cons (coordm (first rankv))
+    (cons ((:map deck) (first rankv))
           (lazy-seq
-           (rank-seq (rest rankv) coordm)))))
+           (rank-seq deck (rest rankv))))))
 
 (defn wcc-inrange-count
-  "counts the number of wholecards which is nominated as inrange in combo"
-  [wcc]
+  "counts the number of wholecards which is inrange in a combo collection"
+  [wcc]  
+  {:pre [(vector? wcc)]}
+  
   (count (filter (fn [wc] (some :inrange? wc)) wcc)))
 
-(defn wcc-matcher [f wcc] (some f wcc))
 
-(def wcc-matcher-inrange?
-  "predicate to check if any of the cards in a combo is inrange?"
-  (partial wcc-matcher :inrange?))
-
-
-(defn map2v
-  "applies f to all the values in a nested seq"
-  [f v]
-  (mapv #(mapv f %) v))
-
-
-
-(defn deck-flatten-to-wc
-  "Flattens the deck to a list of wholecards"
-  [deck]
-  (reduce (fn [total-combos range]
-            (reduce (fn [combos combo]
-                      (reduce conj combos combo))
-                    total-combos range))
-          [] deck))
-
-
-(defn- deck-range-select-wcc
+(defn deck-range-select-wcc
   "sets the specified wholecards in the wc combo collections to inrange? true"
   [deck a b]
-  (update-in deck [a b]
+  (update-in deck [:cards a b]
              (fn [wcc] (map2v #(assoc % :inrange? true) wcc))))
 
 
-(defn- deck-range-select-by-path
+(defn deck-range-select
   "follow a path [[a b]] over the deck and selects wc up to the nlimit of combinations"
-  [deck path nlimit]
 
-  (loop [deck deck
-         ;; number of combos we have selected
-         n 0                
-         path (seq path)]
-      (let [[a b] (first path)]        
-        (cond
-          ;; if we are over the path limit
-          ;; or we dont have a path anymore to
-          ;; follow we just return deck
-          (or (>= n nlimit)
-              (nil? (first path)))
-          deck
-          
-          :else
-          ;; select all wc combos at the coord
-          ;; note: we might select more combos than
-          ;; asked for but lets just view it as an
-          ;; approximation for now
-          (let [deck (deck-range-select-wcc deck a b)]
-            (recur deck
-                   (+ n (wcc-inrange-count
-                         (deck-get-wcc deck a b)))
-                   (rest path)))))))
+  ([deck nlimit]
+   (deck-range-select deck (rank-seq deck hand-ranks) nlimit))
+  
+  ([deck path nlimit]  
+   (loop [deck deck
+          ;; number of combos we have selected
+          n 0                
+          path (seq path)]
+     (let [[a b] (first path)]        
+       (cond
+         ;; if we are over the path limit
+         ;; or we dont have a path anymore to
+         ;; follow we just return deck
+         (or (>= n nlimit)
+             (nil? (first path)))
+         deck
+         
+         :else
+         ;; select all wc combos at the coord
+         ;; note: we might select more combos than
+         ;; asked for but lets just view it as an
+         ;; approximation for now
+         (let [deck (deck-range-select-wcc deck a b)]
+           (recur deck
+                  (+ n (wcc-inrange-count
+                        (deck-get-wcc deck a b)))
+                  (rest path))))))))
 
 
 
@@ -265,29 +223,22 @@
   (reduce (fn [count wc]
             (if (seq (filter :inrange? wc))
               (inc count) count)
-            ) 0 (deck-flatten-to-wc deck)))
+            )
+          0
+          ;; Creating a seq down to hand combo level
+          (reduce (fn [total-combos range]
+                    (reduce (fn [combos combo]
+                              (reduce conj combos combo))
+                            total-combos
+                            range))
+                  []
+                  (:cards deck))))
 
-
-
-(defn deck-range-select
-  "selects a number of wholecards combos in a deck based on best to worse"
-  [deck rankv nc]
-
-  (loop [methods [#(deck-range-select-by-path %1 rankv %2)]
-         deck deck
-         count 0]
-    (if (or (empty? methods)
-            (>= count nc))
-      deck
-      (let [deck ((first methods) deck (- nc count))]
-        (recur
-         (rest methods)
-         deck
-         (deck-wc-inrange-count deck))))))
 
 
 ;; Not done
-;; Algorithm: 
+;; Algorithm:
+;; not decided
 (defn deck-range-ppstring
   "make a pretty string of the selected range.
   notation should be inline with 

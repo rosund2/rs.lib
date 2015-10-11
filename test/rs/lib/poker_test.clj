@@ -2,12 +2,17 @@
   (:require [clojure.test :refer :all]
             [rs.lib.poker :refer :all]))
 
+
+(deftest deck-api []
+  (testing "getting wholecard combos"
+    (is (= 6 (count (deck-get-wcc deck 0 0))) "accessing aces, should return 6 combos")))
+
 (deftest hand-maker []
+
   (testing "creating pairs"
     (let [pairs (pp "AA")]
       (is (= 6 (count pairs)), "should contain 6 wc")
       (is (empty? (filter #(= (first %) (second %)) pairs))), "should not include same suit"))
-
 
   (testing "creating offsuits"
     (let [offsuit (oc "AK")]
@@ -59,9 +64,15 @@
 
 
 (deftest value-ranges []
-  (testing "testing consistency of default value range"
-    (is (= (count pre-all-in-ranking) 169) "a value map should contain values for all hands")
-    (is (= (count pre-all-in-ranking) (count (into #{} pre-all-in-ranking))) "contains duplicate value")
 
-    (is (empty? (clojure.set/difference (apply hash-set all-card-ranks) (apply hash-set pre-all-in-ranking))) "value map should contain all hands")
-    (is (empty? (clojure.set/difference (apply hash-set pre-all-in-ranking) (apply hash-set all-card-ranks) )) "value map should not contain hand values that are not allowed")))
+  (testing "testing consistency of default value range"
+    (is (= (count hand-ranks) 169) "a value map should contain values for all hands")
+    (is (= (count hand-ranks) (count (into #{} hand-ranks))) "contains duplicate value")
+
+    (is (empty? (clojure.set/difference (apply hash-set all-card-ranks) (apply hash-set hand-ranks))) "value map should contain all hands")
+    (is (empty? (clojure.set/difference (apply hash-set hand-ranks) (apply hash-set all-card-ranks) )) "value map should not contain hand values that are not allowed"))
+
+  (testing "testing ranked seq generator"
+    (is (= [0 0] (first (rank-seq deck hand-ranks))) "AA should be top value uno one")))
+
+
