@@ -110,12 +110,17 @@
                  row (range))     
             ) deck (range))))
 
+(defmacro make-deck [deck]
+  `{:cards ~deck
+    :map (make-deck-map ~deck)})
+   
+
 (defmacro defdeck
   "defs a deck"
-  [ name & deck]  
+  [name deck]  
   `(def ~name
-     {:cards ~@deck
-      :map (make-deck-map ~(first deck))}))
+     (make-deck-map ~deck)))
+
 
 (defdeck deck
   [[(pp "AA") (sc "AK") (sc "AQ") (sc "AJ") (sc "AT") (sc "A9") (sc "A8") (sc "A7") (sc "A6") (sc "A5") (sc "A4") (sc "A3") (sc "A2")]
