@@ -10,8 +10,16 @@
 
 (defn- map2v
   "applies f to all the values in a nested seq"
-  [f v]
-  (mapv #(mapv f %) v))
+  [f & arg1]
+  (apply mapv (fn [& arg2] (apply mapv f arg2))  arg1))
+
+(defn test2 [f & args1]
+  (apply mapv (fn [& args2] (do
+                              (println args2)
+                              (apply mapv f
+                                     (first args2)
+                                     ))) args1)
+  )
 
 (def suits #{:club :diamond :spade :heart})
 (def suit->str {:club "c" :diamond "d" :spade "s" :heart "h"})
@@ -183,13 +191,26 @@
 
 
 (defn deck-range-select-wcc
-  "sets the specified wholecards in the wc combo collections to inrange? true"
+  "sets the wholecards in the wc combo collections upto max to inrange? true "
   [deck a b max]
+  
   (update-in deck [:cards a b]
-             (fn [wcc] (map2v #(assoc % :inrange? true) wcc))))
+          (fn [wcc]
+            (loop [wcc  wcc
+                   akk (empty wcc)
+                   count 0]
+              (if (empty? wcc)
+                akk
+                (recur
+                 (rest wcc)
+                 (conj akk
+                       (if (>= count max)
+                         (first wcc)
+                         (mapv #(assoc % :inrange? true) (first wcc))))
+                 (inc count)))))))
 
 
-(defn deck-wc-inrange-count
+(defn deck-inrange-count
   "returns the total inrange count in the deck"
   [deck]
   (reduce (fn [count wc]
@@ -233,7 +254,7 @@
          ;; approximation for now
          (let [deck (deck-range-select-wcc deck a b (- nlimit n))]
            (recur deck
-                  (deck-wc-inrange-count deck)
+                  (deck-inrange-count deck)
                   (rest path))))))))
 
 

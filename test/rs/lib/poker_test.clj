@@ -58,13 +58,13 @@
   (testing "range count calculations"
     ;; deck-total-inrange-count
     (let [deck (deck-range-select deck 10)]
-      (is (= 10 (deck-wc-inrange-count deck)) "ten wc should be selected"))))
+      (is (= 10 (deck-inrange-count deck)) "ten wc should be selected"))))
 
 
 #_(deftest pprint-hand-range []
-  (is (= "AA" (deck-range-ppstring (deck-range-select deck 6))))
-  (is (= "KK+" (deck-range-ppstring (deck-range-select deck 12))))
-  (is (= "44-66" (deck-range-ppstring (deck-range-select deck 6)))))
+    (is (= "AA" (deck-range-ppstring (deck-range-select deck 6))))
+    (is (= "KK+" (deck-range-ppstring (deck-range-select deck 12))))
+    (is (= "44-66" (deck-range-ppstring (deck-range-select deck 6)))))
 
 
 (deftest value-ranges []
