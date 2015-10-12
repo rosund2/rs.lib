@@ -137,11 +137,6 @@
    [(oc "A2") (oc "K2") (oc "Q2") (oc "J2") (oc "T2") (oc "92") (oc "82") (oc "72") (oc "62") (oc "52") (oc "42") (oc "32") (pp "22")]])
 
 
-(defn deck-get-wcc
-  "retrieves a wholecard combo from a given deck position"
-  [{:keys [cards]} a b]
-  (nth (nth cards a) b))
-
 (def hand-ranks
   "ranking of hands from best to lowest
   taken from http://holdemtight.com/pgs/od/oddpgs/3-169holdemhands.htm" 
@@ -181,11 +176,34 @@
   (count (filter (fn [wc] (some :inrange? wc)) wcc)))
 
 
+(defn deck-get-wcc
+  "retrieves a wholecard combo from a given deck position"
+  [{:keys [cards]} a b]
+  (nth (nth cards a) b))
+
+
 (defn deck-range-select-wcc
   "sets the specified wholecards in the wc combo collections to inrange? true"
-  [deck a b]
+  [deck a b max]
   (update-in deck [:cards a b]
              (fn [wcc] (map2v #(assoc % :inrange? true) wcc))))
+
+
+(defn deck-wc-inrange-count
+  "returns the total inrange count in the deck"
+  [deck]
+  (reduce (fn [count wc]
+            (if (seq (filter :inrange? wc))
+              (inc count) count))
+          0
+          ;; Reduce deck to a flat list of wholecards
+          (reduce (fn [total-combos range]
+                    (reduce (fn [combos combo]
+                              (reduce conj combos combo))
+                            total-combos
+                            range))
+                  []
+                  (:cards deck))))
 
 
 (defn deck-range-select
@@ -213,30 +231,13 @@
          ;; note: we might select more combos than
          ;; asked for but lets just view it as an
          ;; approximation for now
-         (let [deck (deck-range-select-wcc deck a b)]
+         (let [deck (deck-range-select-wcc deck a b (- nlimit n))]
            (recur deck
-                  (+ n (wcc-inrange-count
-                        (deck-get-wcc deck a b)))
+                  (deck-wc-inrange-count deck)
                   (rest path))))))))
 
 
 
-(defn deck-wc-inrange-count
-  "count the number of inrange combos in the deck"
-  [deck]
-  (reduce (fn [count wc]
-            (if (seq (filter :inrange? wc))
-              (inc count) count)
-            )
-          0
-          ;; Creating a seq down to hand combo level
-          (reduce (fn [total-combos range]
-                    (reduce (fn [combos combo]
-                              (reduce conj combos combo))
-                            total-combos
-                            range))
-                  []
-                  (:cards deck))))
 
 
 

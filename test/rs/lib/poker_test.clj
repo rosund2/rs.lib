@@ -43,6 +43,10 @@
       (is (= 0 (wcc-inrange-count
                 (deck-get-wcc deck 2 2))) "QQ should not be selected")))
 
+
+  (testing "selecting half a combo collection"
+    (is (= 3  (wcc-inrange-count (deck-get-wcc (deck-range-select-wcc deck 0 0 3) 0 0)))))
+
   (testing "range selection by 10% = 136 combos"
     (let [deck (deck-range-select deck 10)]
       ;; 88++, AJ+, KJ+ (136 combos)
