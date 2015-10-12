@@ -89,37 +89,36 @@
                [c d]))))
 
 
-(defmacro make-deck-map
-  "parses a deck and constructs a wholecard combo name to deck coord map"
+(defmacro make-deck
+  "creates a deck"
   [deck]
-  (apply list '-> {}
-         (mapcat
-          (fn [row r1]
-            (map (fn [col r2]
-                   `(assoc
-                     ~(let [s (resolve (first col))
-                            ranks (second col) ]                                 
-                        (cond
-                          (= s #'pp)
-                          ranks
-                          (= s #'oc)
-                          (str ranks "o")
-                          (= s #'sc)
-                          (str ranks "s")))
+  {:cards deck
+   :map (apply list '-> {}
+               (mapcat
+                (fn [row r1]
+                  (map (fn [col r2]
+                         `(assoc
+                           ~(let [s (resolve (first col))
+                                  ranks (second col) ]                                 
+                              (cond
+                                (= s #'pp)
+                                ranks
+                                (= s #'oc)
+                                (str ranks "o")
+                                (= s #'sc)
+                                (str ranks "s")
+                                :else
+                                (-> (Exception. (str "unresolvable symbol: " (first col))) throw)))
                      [~r1 ~r2]))
                  row (range))     
-            ) deck (range))))
-
-(defmacro make-deck [deck]
-  `{:cards ~deck
-    :map (make-deck-map ~deck)})
+            ) deck (range))) })
    
 
 (defmacro defdeck
   "defs a deck"
   [name deck]  
-  `(def ~name
-     (make-deck-map ~deck)))
+  (list 'def name
+     `(make-deck ~deck)))
 
 
 (defdeck deck
