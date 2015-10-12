@@ -259,6 +259,12 @@
 
 
 
+(defn percentage-to-combo
+  "converts from a percentage to a number of combos"
+  [n]
+  {:pre [(number? n)]}
+  (* (/ (* 52 51) 2)       
+     (/ n 100)))
 
 
 
