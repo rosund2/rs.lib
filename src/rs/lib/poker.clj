@@ -18,8 +18,10 @@
                               (println args2)
                               (apply mapv f
                                      (first args2)
-                                     ))) args1)
-  )
+                                     ))) args1))
+
+(defn in? [seq val]
+  (some #(= val %) seq))
 
 (def suits #{:club :diamond :spade :heart})
 (def suit->str {:club "c" :diamond "d" :spade "s" :heart "h"})
@@ -43,7 +45,7 @@
      (into (map #(str % "s") (:sc m))))))
 
 (defn make-card [rank suit]
-  {:pre [(string? rank) (keyword suit)]}
+  {:pre [(string? rank) (keyword suit) (suits suit) (in? ranks rank)]}
   {:suit suit :rank rank})
 
 (defn card-same-suit? [a b]
@@ -193,21 +195,23 @@
 (defn deck-range-select-wcc
   "sets the wholecards in the wc combo collections upto max to inrange? true "
   [deck a b max]
-  
+
   (update-in deck [:cards a b]
-          (fn [wcc]
-            (loop [wcc  wcc
-                   akk (empty wcc)
-                   count 0]
-              (if (empty? wcc)
-                akk
-                (recur
-                 (rest wcc)
-                 (conj akk
-                       (if (>= count max)
-                         (first wcc)
-                         (mapv #(assoc % :inrange? true) (first wcc))))
-                 (inc count)))))))
+             (fn [wcc]
+               ;; TODO: Pretty sure i can write this as a simple map
+               ;;       instead of this overly complex stuff
+               (loop [wcc  wcc
+                      akk (empty wcc)
+                      count 0]
+                 (if (empty? wcc)
+                   akk
+                   (recur
+                    (rest wcc)
+                    (conj akk
+                          (if (>= count max)
+                            (first wcc)
+                            (mapv #(assoc % :inrange? true) (first wcc))))
+                    (inc count)))))))
 
 
 (defn deck-inrange-count
@@ -267,28 +271,60 @@
      (/ n 100)))
 
 
+;; Parse a string into a list of hands
+(defn make-wc [a b] [a b])
+(defn permutate-all
+  "create all permutations of every a in v into a new vector b with [[a1 a2]..]"
+  [v]
+  (into []
+        (for [a v b v :while (not= a b)]  [a b])))
 
-;; Not done
-;; Algorithm:
-;; not decided
-(defn deck-range-ppstring
-  "make a pretty string of the selected range.
-  notation should be inline with 
-  http://www.pokerstrategy.com/strategy/others/2244/1/"
 
-  [deck]
+;; AA-JJ ; 
+;; AsAc (AcAd, AcAs, AcAh)
+;; AKss (AsKs,AcKc,AhKh,AdKd) same suit
+;; AKss-JTss, All same suit; AKs, AQs,AJs, KQs, KJs, QJs, QTs, JTs (should we limit on no gappers)
+;; AcK-Ac2, all A clubs down to Ac2x
+;; Ac4-Kc4, AcK-Ac4, KcQ-Kc4, 
 
-  (map2v (fn [x]           
-           x
-           ) deck)
-  ;; walk-deck-by-path rankv
-  #_(map (fn [x]        
-         (let [wcc (deck-get-wcc deck (first x) (second x))]
-           "AA"
-           ))
-
-       (deck))
-  ;; make-wcc-pp-string 
+(defn range-parser [str]
 
   )
- 
+
+;; Generate pocket pairs
+(defn pocket-parser [s]
+  (permutate-all
+   (make-card-variants
+    (str (first (seq s))))))
+
+(let [
+      rankset (set (map #(first (char-array %)) (seq ranks)))
+      s (seq "AA-QQ")]
+  (loop
+      [sym (first s)
+       rngstr (rest s)
+       exp []]
+    (cond
+      ;; Done parsing
+      (nil? sym)
+      (do
+        (println "Got here" sym)
+        exp)
+
+      ;; 
+      (and (empty? exp)
+           (rankset sym))
+      (do
+        (recur
+        (first rngstr)
+        (rest rngstr)
+        (conj exp sym)))
+
+      ;;
+      :else
+      exp
+
+      )
+    
+   )
+  )
