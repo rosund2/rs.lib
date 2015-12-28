@@ -8,17 +8,19 @@
 ;;C-s C-w ++ search for current
 
 
+
+(defn- permutate-all
+  "create all permutations of every a in v into a new vector b with [[a1 a2]..]"
+  [v]
+  (into []
+        (for [a v b v :while (not= a b)]  [a b])))
+
+
 (defn- map2v
   "applies f to all the values in a nested seq"
   [f & arg1]
   (apply mapv (fn [& arg2] (apply mapv f arg2))  arg1))
 
-(defn test2 [f & args1]
-  (apply mapv (fn [& args2] (do
-                              (println args2)
-                              (apply mapv f
-                                     (first args2)
-                                     ))) args1))
 
 (defn in? [seq val]
   (some #(= val %) seq))
@@ -26,9 +28,10 @@
 (def suits #{:club :diamond :spade :heart})
 (def suit->str {:club "c" :diamond "d" :spade "s" :heart "h"})
 (def ranks ["A" "K" "Q" "J" "T" "9" "8" "7" "6" "5" "4" "3" "2"])
+(def rankmap {"A" 14 "K" 13 "Q" 12 "J" 11 "T" 10 "9" 9 "8" 8 "7" 7 "6" 6 "5" 5 "4" 4 "3" 3 "2" 2})
 
-(def all-card-ranks
-  "a list of all hand combos"
+(def hand-combos
+  "a list of all possible hand combos"
   (let [m (-> (reduce
                #(let [a (first (seq %2))
                       b (second (seq %2))]
@@ -48,7 +51,7 @@
   {:pre [(string? rank) (keyword suit) (suits suit) (in? ranks rank)]}
   {:suit suit :rank rank})
 
-(defn card-same-suit? [a b]
+(defn same-suit? [a b]
   (= (:suit a) (:suit b)))
 
 (defn- make-card-variants
@@ -81,7 +84,7 @@
         c2 (.toString (second hc))]
     (into [] (for [c (make-card-variants c1)
                    d (make-card-variants c2)
-                   :when (not (card-same-suit? c d))]    
+                   :when (not (same-suit? c d))]    
                [c d]))))
 
 (defn sc
@@ -95,7 +98,7 @@
         c2 (.toString (second hc))]
     (into [] (for [c (make-card-variants c1)
                    d (make-card-variants c2)
-                   :when (card-same-suit? c d)]    
+                   :when (same-suit? c d)]    
                [c d]))))
 
 
@@ -271,15 +274,8 @@
      (/ n 100)))
 
 
-;; Parse a string into a list of hands
-(defn make-wc [a b] [a b])
-(defn permutate-all
-  "create all permutations of every a in v into a new vector b with [[a1 a2]..]"
-  [v]
-  (into []
-        (for [a v b v :while (not= a b)]  [a b])))
 
-
+;; Trying to define a system for defining ranges
 ;; AA-JJ ; 
 ;; AsAc (AcAd, AcAs, AcAh)
 ;; AKss (AsKs,AcKc,AhKh,AdKd) same suit
@@ -287,44 +283,57 @@
 ;; AcK-Ac2, all A clubs down to Ac2x
 ;; Ac4-Kc4, AcK-Ac4, KcQ-Kc4, 
 
-(defn range-parser [str]
+(def handx
+  [(make-card "A" :club) (make-card "K" :diamond) (make-card "K" :club) (make-card "8" :heart) (make-card "2" :club)])
+
+(def handy
+  [(make-card "A" :club) (make-card "K" :diamond) (make-card "K" :club) (make-card "8" :heart) (make-card "8" :club)])
+
+(def handr
+  [(make-card "A" :club) (make-card "Q" :club) (make-card "K" :club) (make-card "J" :club) (make-card "T" :club)])
+
+;; functions
+(defn best-hand-match
+  "returns the best hand
+  {:type :highcard|pair|twopair|trips|str8|flush|boat|4kind|str8flush|roystr8flush}"
+  [hand]
+
 
   )
 
-;; Generate pocket pairs
-(defn pocket-parser [s]
-  (permutate-all
-   (make-card-variants
-    (str (first (seq s))))))
+(defn pair-match
+  "returns a hand-rank if one or twp pairs is found"
+  [hand]
 
-(let [
-      rankset (set (map #(first (char-array %)) (seq ranks)))
-      s (seq "AA-QQ")]
-  (loop
-      [sym (first s)
-       rngstr (rest s)
-       exp []]
+  (let [grouped-by-rank (group-by :rank hand)
+        the-rest (into [] (mapcat val (filterv
+                                       (fn [x] (not= (count (second x)) 2))
+                                       grouped-by-rank)))
+        only-pairs (filterv
+                    (fn [x] (== (count (second x)) 2))
+                    grouped-by-rank)]
+
+
     (cond
-      ;; Done parsing
-      (nil? sym)
-      (do
-        (println "Got here" sym)
-        exp)
+      (== (count only-pairs) 2)
+      {:type :twopair :rank
+       (mapv second
+             (sort (fn [a b] (> (rankmap (first a)) (rankmap (first b))))
+                   only-pairs)) :rest (vec (take 1 the-rest))}
+      
+      (== (count only-pairs) 1)
+      {:type :pair :rank (val (first only-pairs)) :rest (vec (take 3 the-rest))}
 
-      ;; 
-      (and (empty? exp)
-           (rankset sym))
-      (do
-        (recur
-        (first rngstr)
-        (rest rngstr)
-        (conj exp sym)))
-
-      ;;
       :else
-      exp
+      nil)))
 
-      )
-    
-   )
-  )
+(defn roystr8flush-match
+  "returns a hand-rank of royal if match"
+  [hand]
+  (let [high-to-low (sort (fn [a b] (> (rankmap (:rank a)) (rankmap (:rank b)))) hand)]
+    (if (= "AKQJT" (reduce str (map :rank high-to-low)))
+      (let [by-suit (group-by :suit high-to-low)]
+        (if (= 1 (count (seq by-suit)))
+          {:type :royalstr8flush :suit (key (first by-suit))})))))
+
+

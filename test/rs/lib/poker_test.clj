@@ -73,8 +73,8 @@
     (is (= (count hand-ranks) 169) "a value map should contain values for all hands")
     (is (= (count hand-ranks) (count (into #{} hand-ranks))) "contains duplicate value")
 
-    (is (empty? (clojure.set/difference (apply hash-set all-card-ranks) (apply hash-set hand-ranks))) "value map should contain all hands")
-    (is (empty? (clojure.set/difference (apply hash-set hand-ranks) (apply hash-set all-card-ranks) )) "value map should not contain hand values that are not allowed"))
+    (is (empty? (clojure.set/difference (apply hash-set hand-combos) (apply hash-set hand-combos))) "value map should contain all hands")
+    (is (empty? (clojure.set/difference (apply hash-set hand-combos) (apply hash-set hand-combos))) "value map should not contain hand values that are not allowed"))
 
   (testing "testing ranked seq generator"
     (is (= [0 0] (first (rank-seq deck hand-ranks))) "AA should be top value uno one")))
