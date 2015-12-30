@@ -105,6 +105,15 @@
       (is (= :str8flush (:type (str8flush-match (:royal hands)))))
       (is (= :str8flush (:type (str8flush-match (:royal2 hands))))))
 
+    )
+
+  (testing "matching fourkind"
+    (let [hands {:fourkind [(make-card "A" :club) (make-card "A" :club) (make-card "A" :club) (make-card "A" :club) (make-card "T" :club)]
+                 :fourkind2 [(make-card "A" :club) (make-card "Q" :club) (make-card "Q" :diamond) (make-card "K" :club) (make-card "J" :club) (make-card "T" :club)]}]
+      
+      (is (= :fourkind (:type (fourkind-match (:fourkind hands)))))
+      (is (= nil (:type (fourkind-match (:fourkind2 hands))))))
+
     ))
 
 

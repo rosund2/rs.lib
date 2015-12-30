@@ -304,6 +304,12 @@
 
   )
 
+(defn- atleast-five-same-suit [hands]
+  (second (first (seq (filter #(<=  5 (count (second %))) (group-by :suit hands))))))
+
+(defn- sort-hands [hands]
+  (sort (fn [a b] (> (rankmap (:rank a)) (rankmap (:rank b)))) hands))
+
 (defn pair-match
   "returns a hand-rank if one or twp pairs is found"
   [hand]
@@ -315,7 +321,6 @@
         only-pairs (filterv
                     (fn [x] (== (count (second x)) 2))
                     grouped-by-rank)]
-
 
     (cond
       (== (count only-pairs) 2)
@@ -330,22 +335,19 @@
       :else
       nil)))
 
-(defn- atleast-five-same-suit [hands]
-  (second (first (seq (filter #(<=  5 (count (second %))) (group-by :suit hands))))))
 
 (defn roystr8flush-match
   "returns a hand-rank of royal if match"
   [hand]
-  (let [high-to-low (sort (fn [a b] (> (rankmap (:rank a)) (rankmap (:rank b)))) (atleast-five-same-suit hand))]
-    (if (= "AKQJT" (reduce str (map :rank high-to-low)))
+  (let [high-to-low (sort-hands (atleast-five-same-suit hand))]
+    (when (= "AKQJT" (reduce str (map :rank high-to-low)))
       {:type :royalstr8flush :suit (:suit (first high-to-low))})))
-
 
 
 (defn str8flush-match
   "name says it all"
   [hands]
-  (let [high-to-low (sort (fn [a b] (> (rankmap (:rank a)) (rankmap (:rank b)))) (atleast-five-same-suit hands))
+  (let [high-to-low (sort-hands (atleast-five-same-suit hands))
         consecutive (reduce (fn [agg hand]
                               (if (== (count agg) 5)
                                 agg
@@ -360,3 +362,11 @@
     
     (if (= 5 (count consecutive))
       {:type :str8flush :rank consecutive})))
+
+(defn fourkind-match
+  "name says it all"
+  [hands]
+  (when-let [highest-four-kind (second (first (sort #(> (rankmap (first %1)) (rankmap (first %2)))
+                                             ;; filter out different than four
+                                             (filter #(= 4 (count (second %))) (group-by :rank hands)))))]
+    {:type :fourkind :rank highest-four-kind :rest (sort-hands (vec (apply disj (set hands) highest-four-kind )))}))
