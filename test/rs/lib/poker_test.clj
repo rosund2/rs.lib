@@ -79,4 +79,32 @@
   (testing "testing ranked seq generator"
     (is (= [0 0] (first (rank-seq deck hand-ranks))) "AA should be top value uno one")))
 
+(deftest hand-matching
+  "tests related to finding the hand types"
+  []
+
+  (testing "matching those pairs"
+    (is (= :pair (:type (pair-match
+                         [(make-card "A" :club) (make-card "K" :diamond) (make-card "K" :club) (make-card "8" :heart) (make-card "2" :club)]))))
+    
+    (is (= :twopair (:type (pair-match
+                            [(make-card "A" :club) (make-card "K" :diamond) (make-card "K" :club) (make-card "8" :heart) (make-card "8" :club)])))))
+
+  (testing "matching the royal"
+    (let [hands {:royal [(make-card "A" :club) (make-card "Q" :club) (make-card "K" :club) (make-card "J" :club) (make-card "T" :club)]
+                 
+                 :royal2 [(make-card "A" :club) (make-card "Q" :club) (make-card "Q" :diamond) (make-card "K" :club) (make-card "J" :club) (make-card "T" :club)]}]
+      
+      (is (= :royalstr8flush (:type (roystr8flush-match (:royal hands)))))
+      (is (= :royalstr8flush (:type (roystr8flush-match (:royal2 hands)))))))
+
+  (testing "matching the str8flush"
+    (let [hands {:royal [(make-card "A" :club) (make-card "Q" :club) (make-card "K" :club) (make-card "J" :club) (make-card "T" :club)]
+                 :royal2 [(make-card "A" :club) (make-card "Q" :club) (make-card "Q" :diamond) (make-card "K" :club) (make-card "J" :club) (make-card "T" :club)]}]
+      
+      (is (= :str8flush (:type (str8flush-match (:royal hands)))))
+      (is (= :str8flush (:type (str8flush-match (:royal2 hands))))))
+
+    ))
+
 

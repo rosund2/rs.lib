@@ -292,6 +292,9 @@
 (def handr
   [(make-card "A" :club) (make-card "Q" :club) (make-card "K" :club) (make-card "J" :club) (make-card "T" :club)])
 
+(def handstr8
+  [(make-card "2" :spade) (make-card "A" :club) (make-card "Q" :club) (make-card "J" :club) (make-card "T" :club) (make-card "9" :club) (make-card "8" :club)])
+
 ;; functions
 (defn best-hand-match
   "returns the best hand
@@ -327,13 +330,33 @@
       :else
       nil)))
 
+(defn- atleast-five-same-suit [hands]
+  (second (first (seq (filter #(<=  5 (count (second %))) (group-by :suit hands))))))
+
 (defn roystr8flush-match
   "returns a hand-rank of royal if match"
   [hand]
-  (let [high-to-low (sort (fn [a b] (> (rankmap (:rank a)) (rankmap (:rank b)))) hand)]
+  (let [high-to-low (sort (fn [a b] (> (rankmap (:rank a)) (rankmap (:rank b)))) (atleast-five-same-suit hand))]
     (if (= "AKQJT" (reduce str (map :rank high-to-low)))
-      (let [by-suit (group-by :suit high-to-low)]
-        (if (= 1 (count (seq by-suit)))
-          {:type :royalstr8flush :suit (key (first by-suit))})))))
+      {:type :royalstr8flush :suit (:suit (first high-to-low))})))
 
 
+
+(defn str8flush-match
+  "name says it all"
+  [hands]
+  (let [high-to-low (sort (fn [a b] (> (rankmap (:rank a)) (rankmap (:rank b)))) (atleast-five-same-suit hands))
+        consecutive (reduce (fn [agg hand]
+                              (if (== (count agg) 5)
+                                agg
+                                (let [rank (rankmap (:rank hand))
+                                      latest (last agg)]
+                                  (if (nil? latest)
+                                    (conj agg hand)
+                                    (let [last-rank (rankmap (:rank latest))]
+                                      (if (== (inc rank) last-rank)
+                                        (conj agg hand)
+                                        (conj [] hand))))))) [] high-to-low)]
+    
+    (if (= 5 (count consecutive))
+      {:type :str8flush :rank consecutive})))
