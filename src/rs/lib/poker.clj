@@ -409,11 +409,29 @@
 (defn hand-match
   "returns the best hand
   {:type :highcard|pair|twopair|trips|str8|flush|boat|4kind|str8flush|roystr8flush}"
+  
+  [cards]
+  (loop [
+         matchers [roystr8flush-match
+                   str8flush-match
+                   fourkind-match
+                   boat-match
+                   flush-match
+                   str8-match
+                   trips-match
+                   pair-match
+                   high-match]]
+
+    (if-let [matcher (first matchers)]
+      (let [match (matcher cards)]
+        (if-not match
+          (recur (rest matchers))
+          match))
+
+      ;; throw exception because this should not ever happen
+      (.throw (Exception. "There should always be a a match:" cards))))
 
   
-  
-  [hand]
-  ;; try a set of methods return first not nil retvalue
 
 
 

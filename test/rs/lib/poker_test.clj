@@ -77,47 +77,39 @@
     (is (= [0 0] (first (rank-seq deck hand-ranks))) "AA should be top value uno one")))
 
 (deftest hand-matching
-  "tests related to finding the hand types"
+  "tests related to matching poker hand types"
   []
 
-  (testing "matching those pairs"
-    (is (= :pair (:type (pair-match
-                         [(make-card "A" :club) (make-card "K" :diamond) (make-card "K" :club) (make-card "8" :heart) (make-card "2" :club)]))))
+  (let [cardm {
+               :pair      [(make-card "A" :club) (make-card "K" :diamond) (make-card "K" :club) (make-card "8" :heart) (make-card "2" :club)]
+               :twopair   [(make-card "A" :club) (make-card "K" :diamond) (make-card "K" :club) (make-card "8" :heart) (make-card "8" :club)]
+               :royal     [(make-card "A" :club) (make-card "Q" :club) (make-card "K" :club) (make-card "J" :club) (make-card "T" :club)]
+               :royal2    [(make-card "A" :club) (make-card "Q" :club) (make-card "Q" :diamond) (make-card "K" :club) (make-card "J" :club) (make-card "T" :club)]
+               :fourkind  [(make-card "A" :club) (make-card "A" :club) (make-card "A" :club) (make-card "A" :club) (make-card "T" :club)]
+               :fourkind2 [(make-card "A" :club) (make-card "Q" :club) (make-card "Q" :diamond) (make-card "K" :club) (make-card "J" :club) (make-card "T" :club)]
+               :boat      [(make-card "A" :club) (make-card "A" :club) (make-card "A" :club) (make-card "Q" :club) (make-card "Q" :club)]
+               :boat2     [(make-card "A" :club) (make-card "Q" :club) (make-card "Q" :diamond) (make-card "K" :club) (make-card "J" :club) (make-card "T" :club)]
+               }
+        ]
     
-    (is (= :twopair (:type (pair-match
-                            [(make-card "A" :club) (make-card "K" :diamond) (make-card "K" :club) (make-card "8" :heart) (make-card "8" :club)])))))
+    (testing "matching one and two pairs"
+      (is (= :pair (:type (pair-match (:pair cardm)))))
+      (is (= :twopair (:type (pair-match (:twopair cardm))))))
 
-  (testing "matching the royal"
-    (let [hands {:royal [(make-card "A" :club) (make-card "Q" :club) (make-card "K" :club) (make-card "J" :club) (make-card "T" :club)]
-                 
-                 :royal2 [(make-card "A" :club) (make-card "Q" :club) (make-card "Q" :diamond) (make-card "K" :club) (make-card "J" :club) (make-card "T" :club)]}]
-      
-      (is (= :royalstr8flush (:type (roystr8flush-match (:royal hands)))))
-      (is (= :royalstr8flush (:type (roystr8flush-match (:royal2 hands)))))))
+    (testing "matching the royal"
+      (is (= :royalstr8flush (:type (roystr8flush-match (:royal cardm)))))
+      (is (= :royalstr8flush (:type (roystr8flush-match (:royal2 cardm))))))
 
-  (testing "matching the str8flush"
-    (let [hands {:royal [(make-card "A" :club) (make-card "Q" :club) (make-card "K" :club) (make-card "J" :club) (make-card "T" :club)]
-                 :royal2 [(make-card "A" :club) (make-card "Q" :club) (make-card "Q" :diamond) (make-card "K" :club) (make-card "J" :club) (make-card "T" :club)]}]
-      
-      (is (= :str8flush (:type (str8flush-match (:royal hands)))))
-      (is (= :str8flush (:type (str8flush-match (:royal2 hands))))))
+    (testing "matching the str8flush"
+      (is (= :str8flush (:type (str8flush-match (:royal cardm)))))
+      (is (= :str8flush (:type (str8flush-match (:royal2 cardm))))))
 
-    )
-
-  (testing "matching fourkind"
-    (let [hands {:fourkind [(make-card "A" :club) (make-card "A" :club) (make-card "A" :club) (make-card "A" :club) (make-card "T" :club)]
-                 :fourkind2 [(make-card "A" :club) (make-card "Q" :club) (make-card "Q" :diamond) (make-card "K" :club) (make-card "J" :club) (make-card "T" :club)]}]
-      
-      (is (= :fourkind (:type (fourkind-match (:fourkind hands)))))
-      (is (= nil (:type (fourkind-match (:fourkind2 hands)))))))
-
-  (testing "matching boath"
-    (let [hands {:boat [(make-card "A" :club) (make-card "A" :club) (make-card "A" :club) (make-card "Q" :club) (make-card "Q" :club)]
-                 :boat2 [(make-card "A" :club) (make-card "Q" :club) (make-card "Q" :diamond) (make-card "K" :club) (make-card "J" :club) (make-card "T" :club)]}]
-      
-      (is (= :boat (:type (boat-match (:boat hands)))))
-      (is (= nil (:type (boat-match (:boat2 hands))))))
-
-    ))
+    (testing "matching fourkind"
+      (is (= :fourkind (:type (fourkind-match (:fourkind cardm)))))
+      (is (= nil (:type (fourkind-match (:fourkind2 cardm))))))
+    
+    (testing "matching boat"
+      (is (= :boat (:type (boat-match (:boat cardm)))))
+      (is (= nil (:type (boat-match (:boat2 cardm))))))))
 
 
