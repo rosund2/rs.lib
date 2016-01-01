@@ -295,20 +295,31 @@
 (def handstr8
   [(make-card "2" :spade) (make-card "A" :club) (make-card "Q" :club) (make-card "J" :club) (make-card "T" :club) (make-card "9" :club) (make-card "8" :club)])
 
-;; functions
-(defn best-hand-match
-  "returns the best hand
-  {:type :highcard|pair|twopair|trips|str8|flush|boat|4kind|str8flush|roystr8flush}"
-  [hand]
 
-
-  )
 
 (defn- atleast-five-same-suit [hands]
   (second (first (seq (filter #(<=  5 (count (second %))) (group-by :suit hands))))))
 
-(defn- sort-hands [hands]
-  (sort (fn [a b] (> (rankmap (:rank a)) (rankmap (:rank b)))) hands))
+(defn- larger-than [f]
+  (fn [a b] (> (rankmap (f a)) (rankmap (f b)))))
+
+(defn- sort-cards [hands]
+  (sort (larger-than :rank) hands))
+
+(defn- five-or-less-consecutive [cards]
+  (reduce (fn [agg card]
+            (if (== (count agg) 5)
+              agg
+              (let [rank (rankmap (:rank card))
+                    latest (last agg)]
+                (if (nil? latest)
+                  (conj agg card)
+                  (let [last-rank (rankmap (:rank latest))]
+                    (if (== (inc rank) last-rank)
+                      (conj agg card)
+                      (conj [] card))))))) [] (sort-cards cards)))
+
+
 
 (defn pair-match
   "returns a hand-rank if one or twp pairs is found"
@@ -326,7 +337,7 @@
       (== (count only-pairs) 2)
       {:type :twopair :rank
        (mapv second
-             (sort (fn [a b] (> (rankmap (first a)) (rankmap (first b))))
+             (sort (larger-than first)
                    only-pairs)) :rest (vec (take 1 the-rest))}
       
       (== (count only-pairs) 1)
@@ -339,26 +350,16 @@
 (defn roystr8flush-match
   "returns a hand-rank of royal if match"
   [hand]
-  (let [high-to-low (sort-hands (atleast-five-same-suit hand))]
+  (let [high-to-low (sort-cards (atleast-five-same-suit hand))]
     (when (= "AKQJT" (reduce str (map :rank high-to-low)))
       {:type :royalstr8flush :suit (:suit (first high-to-low))})))
 
 
 (defn str8flush-match
   "name says it all"
-  [hands]
-  (let [high-to-low (sort-hands (atleast-five-same-suit hands))
-        consecutive (reduce (fn [agg hand]
-                              (if (== (count agg) 5)
-                                agg
-                                (let [rank (rankmap (:rank hand))
-                                      latest (last agg)]
-                                  (if (nil? latest)
-                                    (conj agg hand)
-                                    (let [last-rank (rankmap (:rank latest))]
-                                      (if (== (inc rank) last-rank)
-                                        (conj agg hand)
-                                        (conj [] hand))))))) [] high-to-low)]
+  [cards]
+  (let [high-to-low (sort-cards (atleast-five-same-suit cards))
+        consecutive (five-or-less-consecutive high-to-low)]
     
     (if (= 5 (count consecutive))
       {:type :str8flush :rank consecutive})))
@@ -366,7 +367,57 @@
 (defn fourkind-match
   "name says it all"
   [hands]
-  (when-let [highest-four-kind (second (first (sort #(> (rankmap (first %1)) (rankmap (first %2)))
+  (when-let [highest-four-kind (second (first (sort (larger-than first) #_(> (rankmap (first %1)) (rankmap (first %2)))
                                              ;; filter out different than four
                                              (filter #(= 4 (count (second %))) (group-by :rank hands)))))]
-    {:type :fourkind :rank highest-four-kind :rest (sort-hands (vec (apply disj (set hands) highest-four-kind )))}))
+    {:type :fourkind
+     :rank highest-four-kind
+     ;; filtering our and sorting the hands that does not match up 4 kind
+     :rest (sort-cards (vec (apply disj (set hands) highest-four-kind )))}))
+
+(defn boat-match
+  "name says it all"
+  [cards]
+  (let [by-rank (group-by :rank cards)
+        pairs (second (first (sort (larger-than first)
+                                   (filter #(= 2 (count (val %))) by-rank))))
+        trips (second (first (sort (larger-than first)
+                                   (filter #(= 3 (count (val %))) by-rank))))]
+    (when (and (seq pairs) (seq trips))
+          {:type :boat :rank [trips pairs]})))
+
+(defn flush-match [cards]
+  (when-let [high-to-low (seq (sort-cards (atleast-five-same-suit cards)))]
+    {:type :flush :suit (:suit (first high-to-low)) :rank (vec high-to-low)}))
+
+(defn str8-match [cards]
+  (let [five-or-less (five-or-less-consecutive cards)]
+    (when (= 5 (count five-or-less))
+      {:type :str8 :rank five-or-less})))
+
+(defn trips-match [cards]
+  (let [by-rank (group-by :rank cards)
+        trips (second (first (sort (larger-than first)
+                                   (filter #(= 3 (count (val %))) by-rank))))]
+    (when (seq trips)
+      {:type :trips :rank trips
+       :rest (sort-cards (vec (apply disj (set cards) trips )))})))
+
+(defn highcard-match [cards]
+  {:type :highcard :rank (vec (sort-cards cards))})
+
+(defn hand-match
+  "returns the best hand
+  {:type :highcard|pair|twopair|trips|str8|flush|boat|4kind|str8flush|roystr8flush}"
+
+  
+  
+  [hand]
+  ;; try a set of methods return first not nil retvalue
+
+
+
+
+  
+
+  )

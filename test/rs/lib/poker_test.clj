@@ -2,13 +2,11 @@
   (:require [clojure.test :refer :all]
             [rs.lib.poker :refer :all]))
 
-
 (deftest deck-api []
   (testing "getting wholecard combos"
     (is (= 6 (count (deck-get-wcc deck 0 0))) "accessing aces, should return 6 combos")))
 
 (deftest hand-maker []
-
   (testing "creating pairs"
     (let [pairs (pp "AA")]
       (is (= 6 (count pairs)), "should contain 6 wc")
@@ -68,7 +66,6 @@
 
 
 (deftest value-ranges []
-
   (testing "testing consistency of default value range"
     (is (= (count hand-ranks) 169) "a value map should contain values for all hands")
     (is (= (count hand-ranks) (count (into #{} hand-ranks))) "contains duplicate value")
@@ -112,7 +109,14 @@
                  :fourkind2 [(make-card "A" :club) (make-card "Q" :club) (make-card "Q" :diamond) (make-card "K" :club) (make-card "J" :club) (make-card "T" :club)]}]
       
       (is (= :fourkind (:type (fourkind-match (:fourkind hands)))))
-      (is (= nil (:type (fourkind-match (:fourkind2 hands))))))
+      (is (= nil (:type (fourkind-match (:fourkind2 hands)))))))
+
+  (testing "matching boath"
+    (let [hands {:boat [(make-card "A" :club) (make-card "A" :club) (make-card "A" :club) (make-card "Q" :club) (make-card "Q" :club)]
+                 :boat2 [(make-card "A" :club) (make-card "Q" :club) (make-card "Q" :diamond) (make-card "K" :club) (make-card "J" :club) (make-card "T" :club)]}]
+      
+      (is (= :boat (:type (boat-match (:boat hands)))))
+      (is (= nil (:type (boat-match (:boat2 hands))))))
 
     ))
 
