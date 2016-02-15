@@ -5,4 +5,5 @@
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.7.0"]
                  [javax.mail/mail "1.4.3"]
-                 [enlive "1.1.6"]])
+                 [enlive "1.1.6"]
+                 [org.clojure/math.combinatorics "0.1.1"]])
