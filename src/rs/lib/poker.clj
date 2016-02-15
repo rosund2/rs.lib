@@ -16,12 +16,14 @@
   {:pre [(suits s) (some #(= r %) ranks)]}
   (->Card r s))
 
-(defn make-hand [a b]
-  {:pre [(= (type a) rs.lib.poker.Card)
-         (= (type b) rs.lib.poker.Card)]}
-  (->Hand a b))
+ (defn make-hand [a b]
+     {:pre [(= (type a) rs.lib.poker.Card)
+            (= (type b) rs.lib.poker.Card)]}
+     (->Hand a b))
 
-(def deck (for [rank ranks suit suits] (make-card rank suit)))
+(def deck
+  (for [rank ranks suit suits]
+    (make-card rank suit)))
 
 ;;
 ;; Above is considered core
@@ -81,7 +83,7 @@
   "returns a hand-rank of royal if match"
   [hand]
   (let [high-to-low (sort-cards (atleast-five-same-suit hand))]
-    (when (= "AKQJT" (reduce str (map :rank high-to-low)))
+    (when (= ":ace:king:queen:jack:ten" (reduce str (map :rank high-to-low)))
       {:type :royalstr8flush :suit (:suit (first high-to-low))})))
 
 
@@ -190,13 +192,6 @@
 
 (defn combine [v n]
   (combo/combinations v n))
-
-
-(defn process-game [game]
-  
-
-  )
-
 
 
 

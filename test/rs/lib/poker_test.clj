@@ -7,14 +7,14 @@
   []
 
   (let [cardm {
-               :pair      [(make-card "A" :club) (make-card "K" :diamond) (make-card "K" :club) (make-card "8" :heart) (make-card "2" :club)]
-               :twopair   [(make-card "A" :club) (make-card "K" :diamond) (make-card "K" :club) (make-card "8" :heart) (make-card "8" :club)]
-               :royal     [(make-card "A" :club) (make-card "Q" :club) (make-card "K" :club) (make-card "J" :club) (make-card "T" :club)]
-               :royal2    [(make-card "A" :club) (make-card "Q" :club) (make-card "Q" :diamond) (make-card "K" :club) (make-card "J" :club) (make-card "T" :club)]
-               :fourkind  [(make-card "A" :club) (make-card "A" :club) (make-card "A" :club) (make-card "A" :club) (make-card "T" :club)]
-               :fourkind2 [(make-card "A" :club) (make-card "Q" :club) (make-card "Q" :diamond) (make-card "K" :club) (make-card "J" :club) (make-card "T" :club)]
-               :boat      [(make-card "A" :club) (make-card "A" :club) (make-card "A" :club) (make-card "Q" :club) (make-card "Q" :club)]
-               :boat2     [(make-card "A" :club) (make-card "Q" :club) (make-card "Q" :diamond) (make-card "K" :club) (make-card "J" :club) (make-card "T" :club)]
+               :pair      [(make-card :ace :club) (make-card :king :diamond) (make-card :king :club) (make-card :eight :heart) (make-card :two :club)]
+               :twopair   [(make-card :ace :club) (make-card :king :diamond) (make-card :king :club) (make-card :eight :heart) (make-card :eight :club)]
+               :royal     [(make-card :ace :club) (make-card :queen :club) (make-card :king :club) (make-card :jack :club) (make-card :ten :club)]
+               :royal2    [(make-card :ace :club) (make-card :queen :club) (make-card :queen :diamond) (make-card :king :club) (make-card :jack :club) (make-card :ten :club)]
+               :fourkind  [(make-card :ace :club) (make-card :ace :club) (make-card :ace :club) (make-card :ace :club) (make-card :ten :club)]
+               :fourkind2 [(make-card :ace :club) (make-card :queen :club) (make-card :queen :diamond) (make-card :king :club) (make-card :jack :club) (make-card :ten :club)]
+               :boat      [(make-card :ace :club) (make-card :ace :club) (make-card :ace :club) (make-card :queen :club) (make-card :queen :club)]
+               :boat2     [(make-card :ace :club) (make-card :queen :club) (make-card :queen :diamond) (make-card :king :club) (make-card :jack :club) (make-card :ten :club)]
                }
         ]
     
