@@ -8,15 +8,17 @@
 (def ranks [:two :three :four :five :six :seven :eight :nine :ten :jack :queen :king :ace])
 (def suits #{:club :spade :heart :diamond})
 
-(defn rank> [a b]
+(defn rank>
+  "compares rank on keyword based on position"
+  [^clojure.lang.Keyword a ^clojure.lang.Keyword b]
   (let [m (into {} (map-indexed (fn [e i] [i e]) ranks))]
     (> (m a) (m b))))
 
-(defn make-card [r s]
+(defn make-card [^clojure.lang.Keyword r ^clojure.lang.Keyword s]
   {:pre [(suits s) (some #(= r %) ranks)]}
   (->Card r s))
 
- (defn make-hand [a b]
+ (defn make-hand [^rs.lib.poker.Card a ^rs.lib.poker.Card b]
      {:pre [(= (type a) rs.lib.poker.Card)
             (= (type b) rs.lib.poker.Card)]}
      (->Hand a b))
@@ -25,6 +27,12 @@
   (for [rank ranks suit suits]
     (make-card rank suit)))
 
+(defn- larger-than [f]
+  (fn [a b] (rank> (f a) (f b))))
+
+(defn- sort-cards [hands]
+  (sort (larger-than :rank) hands))
+
 ;;
 ;; Above is considered core
 ;;
@@ -32,11 +40,6 @@
 (defn- atleast-five-same-suit [hands]
   (second (first (seq (filter #(<=  5 (count (second %))) (group-by :suit hands))))))
 
-(defn- larger-than [f]
-  (fn [a b] (rank> (f a) (f b))))
-
-(defn- sort-cards [hands]
-  (sort (larger-than :rank) hands))
 
 (defn- five-or-less-consecutive [cards]
   (reduce (fn [agg card]
@@ -178,7 +181,6 @@
 
 (def game
   {:positions {:button {:name "nisse"  :range [(make-card :ace :club) (make-card :king :club)]}
-               
                :bb     {:name "troll"  :range [(make-card :five :club) (make-card :six :club)]}}
 
    :preflop {:action [{}]}
@@ -190,9 +192,40 @@
    :river nil})
 
 
-(defn combine [v n]
+(defn combine
+  "v is a vector and n is the number /length of the combinations" 
+  [v n]
   (combo/combinations v n))
 
+
+(defn reduce-flop [v1 v2 f]
+  (map (fn [wc]
+         (let [ d (remove #(or ;; removing the wholecards from the deck
+                            (= % (:a wc))
+                            (= % (:b wc))) deck)
+               flopv (combine d 3)]
+           
+           (reduce f {} (map #(conj % (:a wc) (:b wc)) flopv))))
+       v1))
+
+
+#_(reduce-flop [(make-hand (make-card :ace :spade) (make-card :king :spade)) (make-hand (make-card :queen :spade) (make-card :queen :heart))]
+        deck
+        (fn [agg flop]
+          (let [match (hand-match flop)]
+            (update-in agg [(:type match)] (fnil inc 1)))))
+
+(def zasd
+  '({:trips 309, :pair 7921, :twopair 793, :flush 165, :highcard 10333, :royalstr8flush 2, :str8 64, :fourkind 3, :boat 19} {:boat 193, :twopair 3169, :pair 14081, :trips 2113, :fourkind 49}))
+
+(->>
+ (map
+  #(into {} (map (fn [x] [(first x)
+                          (/ (second x) 22100)]) %)) zasd)
+
+ (map
+  #(into {} (map (fn [x] [(first x)
+                          (str (format "%.2f" (* 100 (double (second x)))) "%")]) %))))
 
 
 
